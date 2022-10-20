@@ -11,9 +11,9 @@ from tkinter import ttk
 import paho.mqtt.client as mqtt
 
 master = tk.Tk()
-client = mqtt.Client("Dashboard")
-global_broker_address = "127.0.0.1"
-global_broker_port = 1884
+client = mqtt.Client("Dashboard", transport="websockets")
+global_broker_address = "localhost"
+global_broker_port = 8083
 
 
 # treatment of messages received from gate through the global broker
@@ -83,9 +83,7 @@ def on_message(client, userdata, message):
                 index="end",
                 iid=cont,
                 text="",
-                values=(
-                    data_item["time"], data_item["lat"], data_item["lon"]
-                ),
+                values=(data_item["time"], data_item["lat"], data_item["lon"]),
             )
             cont = cont + 1
         table.pack()
