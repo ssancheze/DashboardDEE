@@ -4,23 +4,239 @@ import json
 import tkinter as tk
 import cv2 as cv
 import numpy as np
-from PIL import ImageTk, Image
-from tkinter import font
-from tkinter import ttk
 
 import paho.mqtt.client as mqtt
 
-master = tk.Tk()
-client = mqtt.Client("Dashboard", transport="websockets")
-global_broker_address = "localhost"
-global_broker_port = 8083
+from dashboardClasses.LEDsControllerClass import LEDsController
+from dashboardClasses.CameraControllerClass import CameraController
+from dashboardClasses.AutopilotControllerClass import AutopilotController
+from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
+
+class ConfigurationPanel:
+
+    def buildFrame(self, fatherFrame, callback):
+        self.callback = callback
+        self.fatherFrame =fatherFrame
+        self.ParameterFrame = tk.Frame(fatherFrame)
+        self.ParameterFrame.rowconfigure(0, weight=4)
+        self.ParameterFrame.rowconfigure(1, weight=1)
+
+        self.ParameterFrame.columnconfigure(0, weight=1)
+        self.ParameterFrame.columnconfigure(1, weight=1)
+        self.ParameterFrame.columnconfigure(2, weight=1)
+        self.ParameterFrame.columnconfigure(3, weight=1)
+        self.ParameterFrame.columnconfigure(4, weight=1)
+
+        self.operationModeFrame = tk.LabelFrame(self.ParameterFrame, text="Operation mode")
+        self.operationModeFrame.grid (row = 0, column = 0, padx=10, pady=10, sticky="nesw")
+        self.var1 = tk.StringVar()
+        self.var1.set("simulation")
+        tk.Radiobutton(
+            self.operationModeFrame,
+            text="simulation",
+            variable=self.var1,
+            value="simulation",
+            command = self.operationModeChanged
+        ).grid(row=0, sticky="W")
+
+        tk.Radiobutton(
+            self.operationModeFrame,
+            text="production",
+            variable=self.var1,
+            value="production",
+            command = self.operationModeChanged
+        ).grid(row=1, sticky="W")
+
+        self.communicationModeFrame = tk.LabelFrame(self.ParameterFrame, text="Communication mode")
+        self.communicationModeFrame.grid(row=0, column=1, padx=10, pady=10, sticky="nesw")
+        self.var2 = tk.StringVar()
+        self.var2.set("global")
+        tk.Radiobutton(
+            self.communicationModeFrame,
+            text="local",
+            variable=self.var2,
+            value="local",
+            command = self.communicationModeChanged
+        ).grid(row=0, sticky="W")
+
+        tk.Radiobutton(
+            self.communicationModeFrame,
+            text="global",
+            variable=self.var2,
+            value="global",
+            command = self.communicationModeChanged
+        ).grid(row=1, sticky="W")
+
+        self.externalBrokerFrame = tk.LabelFrame(self.ParameterFrame, text="External broker")
+        self.externalBrokerFrame.grid(row=0, column=2, padx=10, pady=10, sticky="nesw")
+        self.var3 = tk.StringVar()
+        self.var3.set("localhost")
+        self.externalBrokerOption1 = tk.Radiobutton(
+            self.externalBrokerFrame,
+            text="localhost",
+            variable=self.var3,
+            value="localhost",
+            command=self.credentialsToggle
+        )
+        self.externalBrokerOption1.grid(row=0, sticky="W")
+
+        self.externalBrokerOption2 = tk.Radiobutton(
+            self.externalBrokerFrame,
+            text="broker.hivemq.com",
+            variable=self.var3,
+            value="broker.hivemq.com",
+            command=self.credentialsToggle
+        )
+        self.externalBrokerOption2.grid(row=1, sticky="W")
+
+        self.externalBrokerOption3 = tk.Radiobutton(
+            self.externalBrokerFrame,
+            text="classpip.upc.edu",
+            variable=self.var3,
+            value="classpip.upc.edu",
+            command=self.credentialsToggle
+        )
+        self.externalBrokerOption3.grid(row=2, sticky="W")
+
+        self.credentialsFrame = tk.LabelFrame(self.externalBrokerFrame, text="Credentials")
+
+        self.usernameLbl = tk.Label (self.credentialsFrame, text = 'username')
+        self.usernameLbl.grid (row = 0, column = 0)
+        self.usernameBox = tk.Entry(self.credentialsFrame)
+        self.usernameBox.grid(row=0, column=1)
+        self.passLbl = tk.Label(self.credentialsFrame, text='pass')
+        self.passLbl.grid(row=1, column=0)
+        self.passBox = tk.Entry(self.credentialsFrame)
+        self.passBox.grid(row=1, column=1)
 
 
-# treatment of messages received from gate through the global broker
+        self.monitorFrame = tk.LabelFrame(self.ParameterFrame, text="Monitor")
+        self.monitorFrame.grid (row = 0, column = 3, padx=10, pady=10, sticky="nesw")
+        self.monitorOptions = [
+            'Autopilot service in external broker',
+            'Camera service in external broker',
+            'Dashboard in external broker',
+        ]
+        self.monitorOptionsSelected = []
+        self.monitorCheckBox = []
+
+        for option in self.monitorOptions:
+            self.monitorOptionsSelected.append(tk.Variable(value=0))
+            self.monitorCheckBox.append(
+                tk.Checkbutton(
+                    self.monitorFrame,
+                    text=option,
+                    variable=self.monitorOptionsSelected[-1]
+                ).pack(anchor=tk.W))
+
+        self.dataServiceFrame = tk.LabelFrame(self.ParameterFrame, text="Data service")
+        self.dataServiceFrame.grid(row=0, column=4, padx=10, pady=10, sticky="nesw")
+        self.dataServiceOptions = [
+            'Record positions'
+        ]
+        self.dataServiceOptionsSelected = []
+        self.dataServiceCheckBox = []
+
+
+        for option in self.dataServiceOptions:
+            self.dataServiceOptionsSelected.append(tk.Variable(value=0))
+            checkOption= tk.Checkbutton(
+                self.dataServiceFrame,
+                text=option,
+                variable=self.dataServiceOptionsSelected[-1]
+            )
+            checkOption.pack(anchor=tk.W)
+            self.dataServiceCheckBox.append(checkOption);
+
+        self.closeButton = tk.Button(
+            self.ParameterFrame,
+            text="Configure the Drone Engineering Ecosystem",
+            bg='red',
+            fg="white",
+            command=self.closeButtonClicked)
+
+        self.closeButton.grid(row = 2, column = 0, columnspan = 5, padx=10, pady=10, sticky="nesw")
+
+
+        return self.ParameterFrame
+
+    def credentialsToggle (self):
+        if self.var3.get () == 'classpip.upc.edu':
+            self.credentialsFrame.grid(row=3, sticky="W")
+        else:
+            self.credentialsFrame.grid_forget()
+
+    def communicationModeChanged (self):
+        if self.var2.get () == 'local':
+            for checkBox in self.dataServiceCheckBox:
+                checkBox.pack_forget()
+        else:
+            for checkBox in self.dataServiceCheckBox:
+                checkBox.pack()
+
+        if self.var1.get () == 'simulation' and self.var2.get () == 'global':
+            self.externalBrokerOption1.grid(row=0, sticky="W")
+            self.externalBrokerOption2.grid(row=1, sticky="W")
+            self.externalBrokerOption3.grid(row=2, sticky="W")
+            if self.var3.get() == 'classpip.upc.edu':
+                self.credentialsFrame.grid(row=3, sticky="W")
+        else:
+            self.externalBrokerOption1.grid_forget()
+            self.externalBrokerOption2.grid_forget()
+            self.externalBrokerOption3.grid_forget()
+            if self.var3.get () == 'classpip.upc.edu':
+                self.credentialsFrame.grid_forget()
+    def operationModeChanged (self):
+        if self.var1.get () == 'simulation' and self.var2.get () == 'global':
+            self.externalBrokerOption1.grid(row=0, sticky="W")
+            self.externalBrokerOption2.grid(row=1, sticky="W")
+            self.externalBrokerOption3.grid(row=2, sticky="W")
+            if self.var3.get() == 'classpip.upc.edu':
+                self.credentialsFrame.grid(row=3, sticky="W")
+        else:
+            self.externalBrokerOption1.grid_forget()
+            self.externalBrokerOption2.grid_forget()
+            self.externalBrokerOption3.grid_forget()
+            if self.var3.get() == 'classpip.upc.edu':
+                self.credentialsFrame.grid_forget()
+    def closeButtonClicked (self):
+
+        monitorOptions = []
+        for i in range(0, len(self.monitorCheckBox)):
+                if self.monitorOptionsSelected[i].get() == '1':
+                    monitorOptions.append(self.monitorOptions[i])
+
+        dataServiceOptions = []
+        for i in range(0, len(self.dataServiceCheckBox)):
+            if self.dataServiceOptionsSelected[i].get() == '1':
+                dataServiceOptions.append(self.dataServiceOptions[i])
+
+        parameters = {
+                'operationMode': self.var1.get(),
+                'communicationMode': self.var2.get(),
+                'externalBroker': self.var3.get(),
+                'monitorOptions': monitorOptions,
+                'dataServiceOptions': dataServiceOptions,
+        }
+        if self.var3.get () == 'classpip.upc.edu':
+            parameters ['username'] = self.usernameBox.get()
+            parameters['pass'] = self.passBox.get()
+
+
+        self.callback (parameters)
+        self.fatherFrame.destroy()
+
+
+
+# treatment of messages received from global broker
 def on_message(client, userdata, message):
+    global myAutopilotController
+    global myCameraController
     global panel
     global lbl
     global table
+    global originlat, originlon
+    global new_window
 
     splited = message.topic.split("/")
     origin = splited[0]
@@ -35,484 +251,176 @@ def on_message(client, userdata, message):
             # Decode to Original Frame
             img = cv.imdecode(npimg, 1)
             # show stream in a separate opencv window
+            img = cv.resize(img, (640, 480))
             cv.imshow("Stream", img)
             cv.waitKey(1)
 
         if command == "picture":
+            print ('recibo picture')
             img = base64.b64decode(message.payload)
-            # converting into numpy array from buffer
-            npimg = np.frombuffer(img, dtype=np.uint8)
-            # Decode to Original Frame
-            cv2image = cv.imdecode(npimg, 1)
-            dim = (300, 300)
-            # resize image
-            cv2image = cv.resize(cv2image, dim, interpolation=cv.INTER_AREA)
-            img = Image.fromarray(cv2image)
-            imgtk = ImageTk.PhotoImage(image=img)
-            panel.imgtk = imgtk
-            panel.configure(image=imgtk)
+            myCameraController.putPicture (img)
 
     if origin == "autopilotService":
-        if command == "droneAltitude":
-            answer = str(message.payload.decode("utf-8"))
-            lbl["text"] = answer[:5]
 
-        if command == "droneHeading":
-            answer = str(message.payload.decode("utf-8"))
-            lbl["text"] = answer[:5]
+        if command == "telemetryInfo":
+            # telemetry_info contains the state of the autopilot.
+            # this is enough for the autopilot controller to decide what to do next
+            telemetry_info = json.loads(message.payload)
+            myAutopilotController.showTelemetryInfo (telemetry_info)
 
-        if command == "droneGroundSpeed":
-            answer = str(message.payload.decode("utf-8"))
-            lbl["text"] = answer[:5]
 
-        if command == "dronePosition":
-            position_str = str(message.payload.decode("utf-8"))
-            position = position_str.split("*")
-            latLbl["text"] = position[0]
-            lonLbl["text"] = position[1]
 
     if origin == "dataService" and command == "storedPositions":
         # receive the positions stored by the data service
         data = message.payload.decode("utf-8")
         # converts received string to json
         data_json = json.loads(data)
-        cont = 0
-        for data_item in data_json:
-            table.insert(
-                parent="",
-                index="end",
-                iid=cont,
-                text="",
-                values=(data_item["time"], data_item["lat"], data_item["lon"]),
-            )
-            cont = cont + 1
-        table.pack()
+        myRecordedPositionsWindow.putStoredPositions(data_json)
 
 
-client.on_message = on_message
 
-# |--DASHBOARD master frame ----------------------------------------------------------------------------------|
-# |                                                                                                           |
-# |  |---connection frame--------------------------------------------------------------------------------|    |
-# |  |---------------------------------------------------------------------------------------------------|    |
-# |                                                                                                           |
-# |  |---top frame---------------------------------------------------------------------------------------|    |
-# |  |                                                                                                   |    |
-# |  |   |--Autopilot control label frame ----------------------------|  |--LEDs control label frame--|  |    |
-# |  |   |                                                            |  |                            |  |    |
-# |  |   |  |--Arm/disarm frame -----------------------------------|  |  |----------------------------|  |    |
-# |  |   |  |------------------------------------------------------|  |                                  |    |
-# |  |   |                                                            |                                  |    |
-# |  |   |  |--bottom frame ---------------------------------------|  |                                  |    |
-# |  |   |  |                                                      |  |                                  |    |
-# |  |   |  |  |-Autopilot get frame--|  |-Autopilot set frame -|  |  |                                  |    |
-# |  |   |  |  |----------------------|  |----------------------|  |  |                                  |    |
-# |  |   |  |                                                      |  |                                  |    |
-# |  |   |  |------------------------------------------------------|  |                                  |    |
-# |  |   |                                                            |                                  |    |
-# |  |   |------------------------------------------------------------|                                  |    |
-# |  |---------------------------------------------------------------------------------------------------|    |
-# |                                                                                                           |
-# |  |---camera control label frame----------------------------------------------------------------------|    |
-# |  |                                                                                                   |    |
-# |  |   |--- Take picture frame -----------|            |--- Video stream frame -----------|            |    |
-# |  |   |                                  |            |                                  |            |    |
-# |  |   |----------------------------------|            |----------------------------------|            |    |
-# |  |---------------------------------------------------------------------------------------------------|    |
-# |                                                                                                           |
-# |-----------------------------------------------------------------------------------------------------------|
-
-
-# Connection frame ----------------------
-connected = False
-connectionFrame = tk.Frame(master)
-connectionFrame.pack(fill=tk.X)
-
-
-def connection_button_clicked():
-    global connected
+def configure (configuration_parameters):
+    global panelFrame
     global client
-    if not connected:
-        connectionButton["text"] = "Disconnect"
-        connectionButton["bg"] = "green"
-        connected = True
-        client.connect(global_broker_address, global_broker_port)
-        client.publish("dashBoard/gate/connectPlatform")
-        client.loop_start()
-        client.subscribe("+/dashBoard/#")
-        print("Connected with drone platform")
 
-        topFrame.pack(fill=tk.X)
-        cameraControlFrame.pack(padx=20, pady=20)
 
+    if configuration_parameters['communicationMode'] == 'global':
+        external_broker_address = configuration_parameters['externalBroker']
     else:
-        print("Disconnect")
-        connectionButton["text"] = "Connect with drone platform"
-        connectionButton["bg"] = "red"
-        connected = False
-        topFrame.pack_forget()
-        ledsControlFrame.pack_forget()
-        cameraControlFrame.pack_forget()
+        external_broker_address = "localhost"
+
+    # the external broker must run always in port 8000
+    external_broker_port = 8000
+
+    client = mqtt.Client("Dashboard", transport="websockets")
+    client.on_message = on_message
+    if external_broker_address =='classpip.upc.edu':
+        client.username_pw_set(configuration_parameters['username'], configuration_parameters['pass'])
+
+    client.connect(external_broker_address, external_broker_port)
+    client.loop_start()
+    client.subscribe("+/dashBoard/#")
+
+    if configuration_parameters['monitorOptions']:
+        monitorOptions = json.dumps( configuration_parameters['monitorOptions'])
+        client.publish("dashBoard/monitor/setOptions", monitorOptions)
+
+    if configuration_parameters['dataServiceOptions']:
+        dataServiceOptions = json.dumps( configuration_parameters['dataServiceOptions'])
+        print ('envio al data service ', dataServiceOptions)
+        client.publish("dashBoard/dataService/setOptions", dataServiceOptions)
 
 
-connectionButton = tk.Button(
-    connectionFrame,
-    text="Connect with drone platform",
-    width=50,
+    myCameraController.putClient(client)
+    myAutopilotController.putClient (client)
+    myRecordedPositionsWindow.putClient(client)
+    # this is to maximize the main window
+    master.deiconify()
+
+
+############################################################################
+############################################################################
+
+master = tk.Tk()
+new_window = tk.Toplevel(master)
+new_window.title("Configuration panel")
+new_window.geometry("900x300")
+confPanel = ConfigurationPanel();
+confPanelFrame = confPanel.buildFrame(new_window, configure)
+confPanelFrame.pack()
+
+
+
+master.title("Main window")
+master.geometry("1150x600")
+master.rowconfigure(0, weight=1)
+master.rowconfigure(1, weight=15)
+client = None
+# this is to minimize the master window so that the configuration window can be seen
+master.iconify()
+
+
+
+def close_button_clicked ():
+    master.destroy()
+
+closeButton = tk.Button(
+    master,
+    text="Close",
+    width=160,
+    height = 1,
     bg="red",
     fg="white",
-    command=connection_button_clicked,
+    command=close_button_clicked,
 )
-connectionButton.grid(row=0, column=0, padx=60, pady=20)
-# top frame -------------------------------------------
-topFrame = tk.Frame(master)
+closeButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
 
-# Autopilot control label frame ----------------------
-autopilotControlFrame = tk.LabelFrame(
-    topFrame, text="Autopilot control", padx=5, pady=5
-)
-autopilotControlFrame.pack(padx=20, side=tk.LEFT)
 
-# Arm/disarm frame ----------------------
-armDisarmFrame = tk.Frame(autopilotControlFrame)
-armDisarmFrame.pack(padx=20)
-armed = False
+# panel frame -------------------------------------------
+panelFrame = tk.Frame(master)
+panelFrame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+panelFrame.columnconfigure(0, weight=1)
+panelFrame.columnconfigure(1, weight=1)
+panelFrame.columnconfigure(2, weight=1)
+panelFrame.columnconfigure(3, weight=3)
+panelFrame.rowconfigure(0, weight=4)
+panelFrame.rowconfigure(1, weight=1)
 
-
-def arm_disarm_button_clicked():
-    global armed
-    if not armed:
-        armDisarmButton["text"] = "Disarm drone"
-        armDisarmButton["bg"] = "green"
-        armed = True
-        client.publish("dashBoard/autopilotService/armDrone")
-    else:
-        armDisarmButton["text"] = "Arm drone"
-        armDisarmButton["bg"] = "red"
-        armed = False
-        client.publish("dashBoard/autopilotService/disarmDrone")
+# Autopilot control frame ----------------------
+myAutopilotController = AutopilotController()
+autopilotControlFrame = myAutopilotController.buildFrame(panelFrame)
+autopilotControlFrame.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
 
-armDisarmButton = tk.Button(
-    armDisarmFrame,
-    text="Arm drone",
-    bg="red",
-    fg="white",
-    width=90,
-    command=arm_disarm_button_clicked,
-)
-armDisarmButton.grid(column=0, row=0, pady=5)
-
-# bottomFrame frame ----------------------
-bottomFrame = tk.Frame(autopilotControlFrame)
-bottomFrame.pack(padx=20)
-
-# Autopilot get frame ----------------------
-autopilotGet = tk.Frame(bottomFrame)
-autopilotGet.pack(side=tk.LEFT, padx=20)
-
-v1 = tk.StringVar()
-s1r1 = tk.Radiobutton(autopilotGet, text="Altitude", variable=v1, value=1).grid(
-    column=0, row=0, columnspan=5, sticky=tk.W
-)
-s1r2 = tk.Radiobutton(autopilotGet, text="Heading", variable=v1, value=2).grid(
-    column=0, row=1, columnspan=5, sticky=tk.W
-)
-s1r3 = tk.Radiobutton(autopilotGet, text="Ground Speed", variable=v1, value=3).grid(
-    column=0, row=2, columnspan=5, sticky=tk.W
-)
-v1.set(1)
-
-
-def autopilot_get_button_clicked():
-    if v1.get() == "1":
-        client.publish("dashBoard/autopilotService/getDroneAltitude")
-    elif v1.get() == "2":
-        client.publish("dashBoard/autopilotService/getDroneHeading")
-    else:
-        client.publish("dashBoard/autopilotService/getDroneGroundSpeed")
-
-
-autopilotGetButton = tk.Button(
-    autopilotGet,
-    text="Get",
-    bg="red",
-    fg="white",
-    width=10,
-    height=5,
-    command=autopilot_get_button_clicked,
-)
-autopilotGetButton.grid(column=5, row=0, columnspan=2, rowspan=3, padx=10)
-
-lbl = tk.Label(autopilotGet, text=" ", width=10, borderwidth=2, relief="sunken")
-lbl.grid(column=7, row=1, columnspan=2)
-
-
-# Autopilot set frame ----------------------
-autopilotSet = tk.Frame(bottomFrame)
-autopilotSet.pack(padx=20)
-
-
-def take_off_button_clicked():
-    client.publish("dashBoard/autopilotService/takeOff", metersEntry.get())
-
-
-take_off_button = tk.Button(
-    autopilotSet,
-    text="Take Off",
-    bg="red",
-    fg="white",
-    width=10,
-    command=take_off_button_clicked,
-)
-take_off_button.grid(column=0, row=1, columnspan=2, sticky=tk.W)
-
-to = tk.Label(autopilotSet, text="to")
-to.grid(column=2, row=1)
-metersEntry = tk.Entry(autopilotSet, width=10)
-metersEntry.grid(column=3, row=1, columnspan=2)
-meters = tk.Label(autopilotSet, text="meters")
-meters.grid(column=5, row=1)
-
-lat = tk.Label(autopilotSet, text="lat")
-lat.grid(column=2, row=2, columnspan=2, padx=5)
-
-lon = tk.Label(autopilotSet, text="lon")
-lon.grid(column=4, row=2, columnspan=2, padx=5)
-
-
-def get_position_button_clicked():
-    client.publish("dashBoard/autopilotService/getDronePosition")
-
-
-getPositionButton = tk.Button(
-    autopilotSet,
-    text="Get Position",
-    bg="red",
-    fg="white",
-    width=10,
-    command=get_position_button_clicked,
-)
-getPositionButton.grid(column=0, row=3, pady=5, sticky=tk.W)
-
-latLbl = tk.Label(autopilotSet, text=" ", width=10, borderwidth=2, relief="sunken")
-latLbl.grid(column=2, row=3, columnspan=2, padx=5)
-
-lonLbl = tk.Label(autopilotSet, text=" ", width=10, borderwidth=2, relief="sunken")
-lonLbl.grid(column=4, row=3, columnspan=2, padx=5)
-
-
-def go_to_button_clicked():
-    position = str(goToLatEntry.get()) + "*" + str(goToLonEntry.get())
-    client.publish("dashBoard/autopilotService/goToPosition", position)
-
-
-goToButton = tk.Button(
-    autopilotSet,
-    text="Go To",
-    bg="red",
-    fg="white",
-    width=10,
-    command=go_to_button_clicked,
-)
-goToButton.grid(column=0, row=4, pady=5, sticky=tk.W)
-
-goToLatEntry = tk.Entry(autopilotSet, width=10)
-goToLatEntry.grid(column=2, row=4, columnspan=2, padx=5)
-
-goToLonEntry = tk.Entry(autopilotSet, width=10)
-goToLonEntry.grid(column=4, row=4, columnspan=2, padx=5)
-
-
-def return_to_launch_button_clicked():
-    client.publish("dashBoard/autopilotService/returnToLaunch")
-
-
-returnToLaunchButton = tk.Button(
-    autopilotSet,
-    text="Return To Launch",
-    bg="red",
-    fg="white",
-    width=40,
-    command=return_to_launch_button_clicked,
-)
-returnToLaunchButton.grid(column=0, row=5, pady=5, columnspan=6, sticky=tk.W)
-
-
-def open_window_to_show_recorded_positions():
-    # Open a new small window to show the positions timestamp to be received from the data service
-    global newWindow
-    global table
-    newWindow = tk.Toplevel(master)
-    newWindow.title("Recorded positions")
-
-    newWindow.geometry("400x400")
-    table = ttk.Treeview(newWindow)
-
-    table["columns"] = ("time", "latitude", "longitude")
-
-    table.column("#0", width=0, stretch=tk.NO)
-    table.column("time", anchor=tk.CENTER, width=150)
-    table.column("latitude", anchor=tk.CENTER, width=80)
-    table.column("longitude", anchor=tk.CENTER, width=80)
-
-    table.heading("#0", text="", anchor=tk.CENTER)
-    table.heading("time", text="Time", anchor=tk.CENTER)
-    table.heading("latitude", text="Latitude", anchor=tk.CENTER)
-    table.heading("longitude", text="Longitude", anchor=tk.CENTER)
-
-    # requiere the stored positions from the data service
-    client.publish("dashBoard/dataService/getStoredPositions")
-
-    closeButton = tk.Button(
-        newWindow,
-        text="Close",
-        bg="red",
-        fg="white",
-        command=close_window_to_show_recorded_positions,
-    ).pack()
-
-
-def close_window_to_show_recorded_positions():
-    global newWindow
-    newWindow.destroy()
-
-
-showRecordedPositionsButton = tk.Button(
-    autopilotSet,
-    text="Show recorded positions",
-    bg="red",
-    fg="white",
-    width=40,
-    command=open_window_to_show_recorded_positions,
-)
-showRecordedPositionsButton.grid(column=0, row=6, pady=5, columnspan=6, sticky=tk.W)
+# Camera control  frame ----------------------
+myCameraController = CameraController()
+cameraControlFrame = myCameraController.buildFrame(panelFrame)
+cameraControlFrame.grid(row=0, column=3, rowspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
 # LEDs control frame ----------------------
-ledsControlFrame = tk.LabelFrame(topFrame, text="LEDs control", padx=5, pady=5)
-ledsControlFrame.pack(padx=20, pady=20)
-
-v3 = tk.StringVar()
-s1r7 = tk.Radiobutton(
-    ledsControlFrame, text="LED sequence START/STOP", variable=v3, value=1
-).grid(column=2, row=2, columnspan=3)
-s1r8 = tk.Radiobutton(
-    ledsControlFrame, text="LED sequence for N seconds", variable=v3, value=2
-).grid(column=2, row=3, columnspan=3)
-
-seconds = tk.Entry(ledsControlFrame, width=5)
-seconds.grid(column=5, row=3, columnspan=3)
-v3.set(1)
-
-lEDSequence = False
+ledsControlFrame = LEDsController().buildFrame(panelFrame, client)
+ledsControlFrame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
 
-def led_control_button_clicked():
-    global E1
-    global lEDSequence
-    if v3.get() == "1":
-        if not lEDSequence:
-            ledControlButton["text"] = "Stop"
-            ledControlButton["bg"] = "green"
-            lEDSequence = True
-            print("Start LEDs sequence")
-            client.publish("dashBoard/LEDsService/startLEDsSequence")
+# Monitor control frame ----------------------
+monitorControlFrame = tk.LabelFrame(panelFrame, text="Monitor control")
+monitorControlFrame.grid(row=1, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
-        else:
-            ledControlButton["text"] = "Start"
-            ledControlButton["bg"] = "red"
-            lEDSequence = False
-            print("Stop LEDs sequence")
-            client.publish("dashBoard/LEDsService/stopLEDsSequence")
-
-    if v3.get() == "2":
-        print("LEDs sequence for N seconds")
-        client.publish("dashBoard/LEDsService/LEDsSequenceForNSeconds", seconds.get())
-
-
-ledControlButton = tk.Button(
-    ledsControlFrame,
-    text="Start",
-    bg="red",
-    fg="white",
-    width=10,
-    height=3,
-    command=led_control_button_clicked,
-)
-ledControlButton.grid(column=8, row=1, padx=5, columnspan=4, rowspan=3)
-
-# Camera control label frame ----------------------
-cameraControlFrame = tk.LabelFrame(master, text="Camera control", padx=5, pady=5)
-
-takePictureFrame = tk.Frame(cameraControlFrame)
-takePictureFrame.pack(side=tk.LEFT)
-
-
-def take_picture_button_clicked():
-    print("Take picture")
-    client.publish("dashBoard/cameraService/takePicture")
-
-
-takePictureButton = tk.Button(
-    takePictureFrame,
-    text="Take Picture",
-    width=50,
-    bg="red",
-    fg="white",
-    command=take_picture_button_clicked,
-)
-takePictureButton.grid(column=0, row=0, pady=20, padx=20)
-
-img = Image.open("image1.jpg")
-img = img.resize((350, 350), Image.ANTIALIAS)
-img = ImageTk.PhotoImage(img)
-panel = tk.Label(takePictureFrame, image=img, borderwidth=2, relief="raised")
-panel.image = img
-panel.grid(column=0, row=1, columnspan=3, rowspan=3)
-
-videoStreamFrame = tk.Frame(cameraControlFrame)
-videoStreamFrame.pack()
-
-videoStream = False
-
-
-def video_stream_button_clicked():
-    global videoStream
+def monitor_toggle ():
     global client
-    if not videoStream:
-        videoStreamButton["text"] = "Stop video stream"
-        videoStreamButton["bg"] = "green"
-        videoStream = True
-        print("Start video stream")
-        client.publish("dashBoard/cameraService/startVideoStream")
-
+    if monitorControlButton['text']== "Start monitor":
+        monitorControlButton['text'] = "Stop monitor"
+        client.publish ("dashBoard/monitor/start")
     else:
-        videoStreamButton["text"] = "Start video stream on a separated window"
-        videoStreamButton["bg"] = "red"
-        videoStream = False
-        print("Stop video stream")
-        client.publish("dashBoard/cameraService/stopVideoStream")
+        monitorControlButton['text'] = "Start monitor"
+        client.publish("dashBoard/monitor/stop")
 
-        cv.destroyWindow("Stream")
-
-
-videoStreamButton = tk.Button(
-    videoStreamFrame,
-    text="Start video stream \n on a separaded window",
-    width=50,
-    height=25,
+monitorControlButton = tk.Button(
+    monitorControlFrame,
+    text="Start monitor",
     bg="red",
     fg="white",
-    command=video_stream_button_clicked,
+    height = 3,
+    width= 20,
+    command=monitor_toggle,
 )
-myFont = font.Font(size=12)
-videoStreamButton["font"] = myFont
-videoStreamButton.grid(
-    column=0,
-    row=0,
-    pady=20,
-    padx=20,
+monitorControlButton.pack(pady=5)
+
+# Data management ----------------------
+myRecordedPositionsWindow = RecordedPositionsWindow(master)
+
+dataManagementFrame = tk.LabelFrame(panelFrame, text="Data management")
+dataManagementFrame.grid(row=1, column=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+showRecordedPositionsButton = tk.Button(
+    dataManagementFrame,
+    text="Show recorded positions",
+    bg='red',
+    fg="white",
+    height=3,
+    width=20,
+    command=myRecordedPositionsWindow.openWindowToShowRecordedPositions
 )
+showRecordedPositionsButton.pack(pady=5)
 
 master.mainloop()
