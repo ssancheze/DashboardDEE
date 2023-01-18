@@ -8,7 +8,7 @@ The Dashboard is a front-end desktop application developed in python and tkinter
 - Showing telemetry data
 - Starting/Stopping a LED sequence in the drone
 
-## Demos
+## Demo
 This video es a short demo of some of the functionalities of the Dashboard. In the video:
 1. A mosquitto broker is started in port 1884. This will serve as internal broker.   
 2. Since the demo is in simulation mode, the Mission Planner simulator is started.   
