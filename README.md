@@ -1,4 +1,5 @@
 # Dashboard (Desktop Application)
+![dashboardDemo](https://user-images.githubusercontent.com/100842082/213115045-5d912126-e94c-4f48-93bd-4e28fc3db477.png)
 
 The Dashboard is a front-end desktop application developed in python and tkinter. It allows the user to do a bunch of things, including:
 - Showing the picture/video stream sent by the camera service
