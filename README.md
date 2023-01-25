@@ -9,7 +9,10 @@ The Dashboard is a front-end desktop application developed in python and tkinter
 - Starting/Stopping a LED sequence in the drone
 
 ## Demo
-This video es a short demo of some of the functionalities of the Dashboard. In the video:
+This video es a short demo of some of the functionalities of the Dashboard.    
+[Dashboard in action](https://youtu.be/08v7_bG5FcM)     
+
+In the video:
 1. A mosquitto broker is started in port 1884. This will serve as internal broker.   
 2. Since the demo is in simulation mode, the Mission Planner simulator is started.   
 3. Both the camera service and the autopilot service are started in global and simulation modes, and will user the public broker broker.hivemq.com as external broker. Note that the camera service may take some time to start (be patient).
