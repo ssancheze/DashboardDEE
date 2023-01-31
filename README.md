@@ -27,6 +27,10 @@ The user guides the drone in different directions and returns to home.
    
 You can also play with a third option for flight planning (spiral) or to start/stop the monitor from the main pannel of the Dashboard, or to show the positions recorded by the data service in case it was asked to do so or to play with the LEDs service.   
 
+## Installation and contribution
+In order to run and contribute to this module you need Pythion 3.7. We recommend PyCharm as IDE for development.       
+To contribute to must follow the contribution protocol describen in the main repo of the Drone Engineering Ecosystem.
+[![DroneEngineeringEcosystem Badge](https://img.shields.io/badge/DEE-MainRepo-brightgreen.svg)](https://github.com/dronsEETAC/DroneEngineeringEcosystemDEE)
 
 
 
