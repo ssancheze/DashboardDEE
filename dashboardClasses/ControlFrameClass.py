@@ -174,8 +174,7 @@ class ControlFrame:
 
 
     def drop (self):
-        print ('pido positions')
-        #self.client.publish('dashBoard/dataService/getStoredPositions')
+        self.client.publish('dashBoard/LEDsService/drop')
         '''if self.onAir:
             self.client.publish('dashBoard/LEDsService/drop')
         else:
