@@ -26,6 +26,7 @@ class ConfigurationPanel:
         self.ParameterFrame.columnconfigure(2, weight=1)
         self.ParameterFrame.columnconfigure(3, weight=1)
         self.ParameterFrame.columnconfigure(4, weight=1)
+        self.ParameterFrame.columnconfigure(5, weight=1)
 
         self.operationModeFrame = tk.LabelFrame(
             self.ParameterFrame, text="Operation mode"
@@ -155,6 +156,20 @@ class ConfigurationPanel:
             checkOption.pack(anchor=tk.W)
             self.dataServiceCheckBox.append(checkOption)
 
+        self.swarmModeFrame = tk.LabelFrame(self.ParameterFrame, text="(EXP) Swarm mode")
+        self.swarmModeFrame.grid(row=0, column=5, padx=10, pady=10, sticky="nesw")
+        self.swarmModeState = tk.Variable(value=0)
+        self.swarmModeButton = tk.Checkbutton(self.swarmModeFrame, text="Swarm mode",
+                                              command=self.swarmModeButtonClicked,
+                                              variable=self.swarmModeState)
+        self.swarmModeButton.pack()
+
+        optionList = ("2", "3", "4", "5", "6")
+        self.swarmModeNumber = tk.StringVar(value="2")
+        self.swarmModeOptionMenu = tk.OptionMenu(self.swarmModeFrame,
+                                                 self.swarmModeNumber,
+                                                 *optionList)
+
         self.closeButton = tk.Button(
             self.ParameterFrame,
             text="Configure the Drone Engineering Ecosystem",
@@ -164,7 +179,7 @@ class ConfigurationPanel:
         )
 
         self.closeButton.grid(
-            row=2, column=0, columnspan=5, padx=10, pady=10, sticky="nesw"
+            row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nesw"
         )
 
         return self.ParameterFrame
@@ -210,7 +225,15 @@ class ConfigurationPanel:
             if self.var3.get() == "classpip.upc.edu":
                 self.credentialsFrame.grid_forget()
 
+    def swarmModeButtonClicked(self):
+        _buttonClicked = int(self.swarmModeState.get())
+        if _buttonClicked == 1:
+            self.swarmModeOptionMenu.pack()
+        elif _buttonClicked == 0:
+            self.swarmModeOptionMenu.pack_forget()
+
     def closeButtonClicked(self):
+        myAutopilotController.setSwarmMode((int(self.swarmModeState.get()), int(self.swarmModeNumber.get())))
 
         monitorOptions = []
         for i in range(0, len(self.monitorCheckBox)):
