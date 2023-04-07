@@ -156,19 +156,24 @@ class ConfigurationPanel:
             checkOption.pack(anchor=tk.W)
             self.dataServiceCheckBox.append(checkOption)
 
-        self.swarmModeFrame = tk.LabelFrame(self.ParameterFrame, text="(EXP) Swarm mode")
+        self.swarmModeFrame = tk.LabelFrame(
+            self.ParameterFrame, text="(EXP) Swarm mode"
+        )
         self.swarmModeFrame.grid(row=0, column=5, padx=10, pady=10, sticky="nesw")
         self.swarmModeState = tk.Variable(value=0)
-        self.swarmModeButton = tk.Checkbutton(self.swarmModeFrame, text="Swarm mode",
-                                              command=self.swarmModeButtonClicked,
-                                              variable=self.swarmModeState)
+        self.swarmModeButton = tk.Checkbutton(
+            self.swarmModeFrame,
+            text="Swarm mode",
+            command=self.swarmModeButtonClicked,
+            variable=self.swarmModeState,
+        )
         self.swarmModeButton.pack()
 
         optionList = ("2", "3", "4", "5", "6")
         self.swarmModeNumber = tk.StringVar(value="2")
-        self.swarmModeOptionMenu = tk.OptionMenu(self.swarmModeFrame,
-                                                 self.swarmModeNumber,
-                                                 *optionList)
+        self.swarmModeOptionMenu = tk.OptionMenu(
+            self.swarmModeFrame, self.swarmModeNumber, *optionList
+        )
 
         self.closeButton = tk.Button(
             self.ParameterFrame,
@@ -233,7 +238,9 @@ class ConfigurationPanel:
             self.swarmModeOptionMenu.pack_forget()
 
     def closeButtonClicked(self):
-        myAutopilotController.setSwarmMode((int(self.swarmModeState.get()), int(self.swarmModeNumber.get())))
+        myAutopilotController.setSwarmMode(
+            (int(self.swarmModeState.get()), int(self.swarmModeNumber.get()))
+        )
 
         monitorOptions = []
         for i in range(0, len(self.monitorCheckBox)):
