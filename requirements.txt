@@ -4,3 +4,6 @@ Pillow==9.2.0
 djitellopy==2.4.0
 paho-mqtt==1.6.1
 pre-commit==2.21.0
+pyppeteer
+ttkwidgets
+geographiclib
