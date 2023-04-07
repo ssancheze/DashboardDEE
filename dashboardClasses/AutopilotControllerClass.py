@@ -17,11 +17,12 @@ class AutopilotController:
         self.frame = frame
         self.flightPlanDesignerWindow = None
         self.autopilotControlFrame = tk.LabelFrame(
-            frame, text="FLight control", padx=5, pady=5
+            frame, text="Flight control", padx=5, pady=5
         )
         self.autopilotControlFrame.rowconfigure(0, weight=1)
         self.autopilotControlFrame.rowconfigure(1, weight=5)
         self.autopilotControlFrame.rowconfigure(2, weight=1)
+        self.autopilotControlFrame.rowconfigure(3, weight=1)
         self.autopilotControlFrame.columnconfigure(0, weight=1)
         self.autopilotControlFrame.columnconfigure(1, weight=1)
 
@@ -85,6 +86,103 @@ class AutopilotController:
 
         self.ppm = 2.78
         self.connected = False
+
+        # Swarm control frame ----------------------
+        self.swarmControlFrame = tk.LabelFrame(
+            self.autopilotControlFrame, text="Swarm control"
+        )
+        self.swarmControlFrame.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            padx=5,
+            pady=5,
+            sticky=tk.N + tk.S + tk.E + tk.W,
+        )
+
+        self.swarmControlFrame.rowconfigure(0, weight=1)
+        self.swarmControlFrame.columnconfigure(0, weight=1)
+        self.swarmControlFrame.columnconfigure(0, weight=1)
+        self.swarmControlFrame.columnconfigure(1, weight=1)
+        self.swarmControlFrame.columnconfigure(2, weight=1)
+        self.swarmControlFrame.columnconfigure(3, weight=1)
+        self.swarmControlFrame.columnconfigure(4, weight=1)
+        self.swarmControlFrame.columnconfigure(5, weight=1)
+
+        drone1Var = tk.BooleanVar(value=False)
+        drone1CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#1",
+            variable=drone1Var,
+            state=tk.DISABLED,
+        )
+        drone1CheckButton.grid(row=0, column=0, pady=5)
+
+        drone2Var = tk.BooleanVar(value=False)
+        drone2CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#2",
+            variable=drone2Var,
+            state=tk.DISABLED,
+        )
+        drone2CheckButton.grid(row=0, column=1, pady=5)
+
+        drone3Var = tk.BooleanVar(value=False)
+        drone3CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#3",
+            variable=drone3Var,
+            state=tk.DISABLED,
+        )
+        drone3CheckButton.grid(row=0, column=2, pady=5)
+
+        drone4Var = tk.BooleanVar(value=False)
+        drone4CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#4",
+            variable=drone4Var,
+            state=tk.DISABLED,
+        )
+        drone4CheckButton.grid(row=0, column=3, pady=5)
+
+        drone5Var = tk.BooleanVar(value=False)
+        drone5CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#5",
+            variable=drone5Var,
+            state=tk.DISABLED,
+        )
+        drone5CheckButton.grid(row=0, column=4, pady=5)
+
+        drone6Var = tk.BooleanVar(value=False)
+        drone6CheckButton = tk.Checkbutton(
+            master=self.swarmControlFrame,
+            text="#6",
+            variable=drone6Var,
+            state=tk.DISABLED,
+        )
+        drone6CheckButton.grid(row=0, column=5, pady=5)
+
+        swarmModeDronesList = [
+            drone1Var.get(),
+            drone2Var.get(),
+            drone3Var.get(),
+            drone4Var.get(),
+            drone5Var.get(),
+            drone6Var.get(),
+        ]
+        self.swarmModeButtonsList = [
+            drone1CheckButton,
+            drone2CheckButton,
+            drone3CheckButton,
+            drone4CheckButton,
+            drone5CheckButton,
+            drone6CheckButton,
+        ]
+        self.swarmModeDronesSelected = bin(
+            sum([b << i for i, b in enumerate(swarmModeDronesList)])
+        )
+
         return self.autopilotControlFrame
 
     def connect_button_clicked(self):
@@ -277,6 +375,11 @@ class AutopilotController:
         )
         self.flightPlanDesignerWindow.openWindowToCreateFlightPlan()
         self.newWindow.destroy()
+
+    def setSwarmMode(self, swarmMode):
+        if swarmMode[0] == 1:
+            for _ in range(swarmMode[1]):
+                self.swarmModeButtonsList[_]["state"] = tk.NORMAL
 
     def close(self):
         self.newWindow.destroy()
