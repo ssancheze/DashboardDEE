@@ -14,6 +14,7 @@ from dashboardClasses.TelemetryInfoFrameClass import TelemetryInfoFrame
 class AutopilotController:
     def buildFrame(self, frame):
 
+        self.swarmNumber = 0
         self.frame = frame
         self.flightPlanDesignerWindow = None
         self.autopilotControlFrame = tk.LabelFrame(
@@ -109,68 +110,66 @@ class AutopilotController:
         self.swarmControlFrame.columnconfigure(4, weight=1)
         self.swarmControlFrame.columnconfigure(5, weight=1)
 
-        drone1Var = tk.BooleanVar(value=False)
+        self.drone1Var = tk.BooleanVar(value=False)
         drone1CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#1",
-            variable=drone1Var,
+            variable=self.drone1Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone1CheckButton.grid(row=0, column=0, pady=5)
 
-        drone2Var = tk.BooleanVar(value=False)
+        self.drone2Var = tk.BooleanVar(value=False)
         drone2CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#2",
-            variable=drone2Var,
+            variable=self.drone2Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone2CheckButton.grid(row=0, column=1, pady=5)
 
-        drone3Var = tk.BooleanVar(value=False)
+        self.drone3Var = tk.BooleanVar(value=False)
         drone3CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#3",
-            variable=drone3Var,
+            variable=self.drone3Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone3CheckButton.grid(row=0, column=2, pady=5)
 
-        drone4Var = tk.BooleanVar(value=False)
+        self.drone4Var = tk.BooleanVar(value=False)
         drone4CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#4",
-            variable=drone4Var,
+            variable=self.drone4Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone4CheckButton.grid(row=0, column=3, pady=5)
 
-        drone5Var = tk.BooleanVar(value=False)
+        self.drone5Var = tk.BooleanVar(value=False)
         drone5CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#5",
-            variable=drone5Var,
+            variable=self.drone5Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone5CheckButton.grid(row=0, column=4, pady=5)
 
-        drone6Var = tk.BooleanVar(value=False)
+        self.drone6Var = tk.BooleanVar(value=False)
         drone6CheckButton = tk.Checkbutton(
             master=self.swarmControlFrame,
             text="#6",
-            variable=drone6Var,
+            variable=self.drone6Var,
             state=tk.DISABLED,
+            command=self.swarmControlCheckButtonChanged
         )
         drone6CheckButton.grid(row=0, column=5, pady=5)
 
-        swarmModeDronesList = [
-            drone1Var.get(),
-            drone2Var.get(),
-            drone3Var.get(),
-            drone4Var.get(),
-            drone5Var.get(),
-            drone6Var.get(),
-        ]
         self.swarmModeButtonsList = [
             drone1CheckButton,
             drone2CheckButton,
@@ -179,21 +178,18 @@ class AutopilotController:
             drone5CheckButton,
             drone6CheckButton,
         ]
-        self.swarmModeDronesSelected = bin(
-            sum([b << i for i, b in enumerate(swarmModeDronesList)])
-        )
 
         return self.autopilotControlFrame
 
     def connect_button_clicked(self):
         if self.connectButton["text"] == "Connect":
-            self.client.publish("dashBoard/autopilotService/connect")
+            self.client.publish("dashBoard/autopilotService/connect/"+str(self.swarmNumber))
             self.connectButton["text"] = "Connecting ..."
             self.connectButton["bg"] = "orange"
 
         else:
             if not self.myControlFrameClass.isOnAir():
-                self.client.publish("dashBoard/autopilotService/disconnect")
+                self.client.publish("dashBoard/autopilotService/disconnect/"+str(self.swarmNumber))
                 self.myControlFrameClass.setDisconnected()
                 self.connected = False
                 self.connectButton["text"] = "Connect"
@@ -380,6 +376,18 @@ class AutopilotController:
         if swarmMode[0] == 1:
             for _ in range(swarmMode[1]):
                 self.swarmModeButtonsList[_]["state"] = tk.NORMAL
+
+    def swarmControlCheckButtonChanged(self):
+        self.swarmModeDronesList = [
+            self.drone1Var.get(),
+            self.drone2Var.get(),
+            self.drone3Var.get(),
+            self.drone4Var.get(),
+            self.drone5Var.get(),
+            self.drone6Var.get(),
+        ]
+        self.swarmNumber = sum([b << i for i, b in enumerate(self.swarmModeDronesList)])
+        self.myControlFrameClass.setSwarmDroneNumber(self.swarmNumber)
 
     def close(self):
         self.newWindow.destroy()

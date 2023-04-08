@@ -4,7 +4,7 @@ from tkinter import messagebox
 
 class ControlFrame:
     def buldFrame(self, fatherFrame):
-
+        self.swarmNumber = 0
         self.controlFrame = tk.LabelFrame(fatherFrame, text="Control")
 
         self.controlFrame.rowconfigure(0, weight=1)
@@ -197,61 +197,61 @@ class ControlFrame:
 
     def goN(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "North")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "North")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goS(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "South")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "South")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goE(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "East")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "East")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goW(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "West")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "West")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goNW(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "NorthWest")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "NorthWest")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goNE(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "NorthEst")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "NorthEst")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goSW(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "SouthWest")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "SouthWest")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def goSE(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "SouthEst")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "SouthEst")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def stop(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/go", "Stop")
+            self.client.publish("dashBoard/autopilotService/go/"+str(self.swarmNumber), "Stop")
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def RTL(self):
         if self.onAir:
-            self.client.publish("dashBoard/autopilotService/returnToLaunch")
+            self.client.publish("dashBoard/autopilotService/returnToLaunch/"+str(self.swarmNumber))
             self.RTLButton["text"] = "Returning"
             self.RTLButton["bg"] = "orange"
         else:
@@ -265,11 +265,11 @@ class ControlFrame:
                     "Warning", "No puedes armar. Primero debes conectarte"
                 )
             else:
-                self.client.publish("dashBoard/autopilotService/armDrone")
+                self.client.publish("dashBoard/autopilotService/armDrone/"+str(self.swarmNumber))
                 self.armButton["text"] = "Arming ..."
                 self.armButton["bg"] = "orange"
         elif not self.state == "flying":
-            self.client.publish("dashBoard/autopilotService/disarmDrone")
+            self.client.publish("dashBoard/autopilotService/disarmDrone/"+str(self.swarmNumber))
         else:
             messagebox.showwarning("Warning", "No puedes desarmar. Estas volando")
 
@@ -278,7 +278,7 @@ class ControlFrame:
             messagebox.showwarning("Warning", "Antes de despegar debes armar")
         elif not self.state == "flying":
             self.client.publish(
-                "dashBoard/autopilotService/takeOff", self.altitude.get()
+                "dashBoard/autopilotService/takeOff/"+str(self.swarmNumber), self.altitude.get()
             )
             self.onAir = True
             self.takeOffButton["text"] = "taking off ..."
@@ -288,14 +288,14 @@ class ControlFrame:
 
     def land(self):
         if self.state == "flying":
-            self.client.publish("dashBoard/autopilotService/land")
+            self.client.publish("dashBoard/autopilotService/land/"+str(self.swarmNumber))
             self.LandButton["text"] = "Landing"
             self.LandButton["bg"] = "orange"
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
     def drop(self):
-        self.client.publish("dashBoard/LEDsService/drop")
+        self.client.publish("dashBoard/LEDsService/drop/"+str(self.swarmNumber))
         """if self.onAir:
             self.client.publish('dashBoard/LEDsService/drop')
         else:
@@ -334,3 +334,6 @@ class ControlFrame:
 
     def setDisconnected(self):
         self.connected = False
+
+    def setSwarmDroneNumber(self, swarmNumber):
+        self.swarmNumber = swarmNumber
