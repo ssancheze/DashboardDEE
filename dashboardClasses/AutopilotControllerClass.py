@@ -14,7 +14,8 @@ from dashboardClasses.TelemetryInfoFrameClass import TelemetryInfoFrame
 class AutopilotController:
     def buildFrame(self, frame):
 
-        self.swarmNumber = 0
+        self.swarmNumber = 1
+        self.swarmTotal = 1
         self.frame = frame
         self.flightPlanDesignerWindow = None
         self.autopilotControlFrame = tk.LabelFrame(
@@ -182,14 +183,17 @@ class AutopilotController:
         return self.autopilotControlFrame
 
     def connect_button_clicked(self):
+        swarmAll = 0
+        for nn in range(self.swarmTotal):
+            swarmAll += pow(2, nn)
         if self.connectButton["text"] == "Connect":
-            self.client.publish("dashBoard/autopilotService/connect/"+str(self.swarmNumber))
+            self.client.publish("dashBoard/autopilotService/connect/"+str(swarmAll))
             self.connectButton["text"] = "Connecting ..."
             self.connectButton["bg"] = "orange"
 
         else:
             if not self.myControlFrameClass.isOnAir():
-                self.client.publish("dashBoard/autopilotService/disconnect/"+str(self.swarmNumber))
+                self.client.publish("dashBoard/autopilotService/disconnect/"+str(swarmAll))
                 self.myControlFrameClass.setDisconnected()
                 self.connected = False
                 self.connectButton["text"] = "Connect"
@@ -374,7 +378,8 @@ class AutopilotController:
 
     def setSwarmMode(self, swarmMode):
         if swarmMode[0] == 1:
-            for _ in range(swarmMode[1]):
+            self.swarmTotal = swarmMode[1]
+            for _ in range(self.swarmTotal):
                 self.swarmModeButtonsList[_]["state"] = tk.NORMAL
 
     def swarmControlCheckButtonChanged(self):
