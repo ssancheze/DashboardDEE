@@ -187,8 +187,8 @@ class ControlFrame:
             row=3, column=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
         )
 
-        self.swarmNumber = 1
-        self.activeDronesList = [1, 0, 0, 0, 0, 0]
+        self.swarmNumber = 0
+        self.activeDronesList = [0, 0, 0, 0, 0, 0]
         self.state = ["disconnected" for _ in range(6)]
         self.onAir = [False for _ in range(6)]
         self.connected = [False for _ in range(6)]
@@ -198,10 +198,6 @@ class ControlFrame:
     def setSwarmDroneNumber(self, swarmNumber):
         print(swarmNumber)
         self.swarmNumber = swarmNumber
-        self.activeDronesList = [(swarmNumber >> n) & 1 for n in range(6)]
-        self.state = ["disconnected" for _ in range(sum(self.activeDronesList))]
-        self.onAir = [False for _ in range(sum(self.activeDronesList))]
-        self.connected = [False for _ in range(sum(self.activeDronesList))]
 
     def getLogicList(self):
         return [((self.swarmNumber >> n) & 1) for n in range(6)]

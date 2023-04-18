@@ -15,7 +15,7 @@ class AutopilotController:
     def buildFrame(self, frame):
 
         self.swarmNumber = 1
-        self.swarmTotal = 1
+        self.swarmAll = 0
         self.frame = frame
         self.flightPlanDesignerWindow = None
         self.autopilotControlFrame = tk.LabelFrame(
@@ -183,17 +183,14 @@ class AutopilotController:
         return self.autopilotControlFrame
 
     def connect_button_clicked(self):
-        swarmAll = 0
-        for nn in range(self.swarmTotal):
-            swarmAll += pow(2, nn)
         if self.connectButton["text"] == "Connect":
-            self.client.publish("dashBoard/autopilotService/connect/"+str(swarmAll))
+            self.client.publish("dashBoard/autopilotService/connect/"+str(self.swarmAll))
             self.connectButton["text"] = "Connecting ..."
             self.connectButton["bg"] = "orange"
 
         else:
             if not self.myControlFrameClass.isOnAir():
-                self.client.publish("dashBoard/autopilotService/disconnect/"+str(swarmAll))
+                self.client.publish("dashBoard/autopilotService/disconnect/"+str(self.swarmAll))
                 self.myControlFrameClass.setDisconnected()
                 self.connected = False
                 self.connectButton["text"] = "Connect"
@@ -378,9 +375,12 @@ class AutopilotController:
 
     def setSwarmMode(self, swarmMode):
         if swarmMode[0] == 1:
-            self.swarmTotal = swarmMode[1]
-            for _ in range(self.swarmTotal):
-                self.swarmModeButtonsList[_]["state"] = tk.NORMAL
+            swarmTotal = swarmMode[1]
+            _swarmAll = 0
+            for nn in range(swarmTotal):
+                _swarmAll += pow(2, nn)
+                self.swarmModeButtonsList[nn]["state"] = tk.NORMAL
+            self.swarmAll = _swarmAll
 
     def swarmControlCheckButtonChanged(self):
         self.swarmModeDronesList = [
