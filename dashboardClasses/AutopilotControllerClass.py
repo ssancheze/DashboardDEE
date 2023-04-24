@@ -14,8 +14,8 @@ from dashboardClasses.TelemetryInfoFrameClass import TelemetryInfoFrame
 class AutopilotController:
     def buildFrame(self, frame):
 
-        self.swarmNumber = 1
-        self.swarmAll = 0
+        self.swarmNumber = [0]
+        self.swarmAll = [0]
         self.frame = frame
         self.flightPlanDesignerWindow = None
         self.autopilotControlFrame = tk.LabelFrame(
@@ -184,13 +184,15 @@ class AutopilotController:
 
     def connect_button_clicked(self):
         if self.connectButton["text"] == "Connect":
-            self.client.publish("dashBoard/autopilotService/connect/"+str(self.swarmAll))
+            for droneId in self.swarmAll:
+                self.client.publish("dashBoard/autopilotService/"+str(droneId)+"/connect")
             self.connectButton["text"] = "Connecting ..."
             self.connectButton["bg"] = "orange"
 
         else:
             if not self.myControlFrameClass.isOnAir():
-                self.client.publish("dashBoard/autopilotService/disconnect/"+str(self.swarmAll))
+                for droneId in self.swarmAll:
+                    self.client.publish("dashBoard/autopilotService/"+str(droneId)+"/disconnect/")
                 self.myControlFrameClass.setDisconnected()
                 self.connected = False
                 self.connectButton["text"] = "Connect"
@@ -375,12 +377,11 @@ class AutopilotController:
 
     def setSwarmMode(self, swarmMode):
         if swarmMode[0] == 1:
-            swarmTotal = swarmMode[1]
-            _swarmAll = 0
-            for nn in range(swarmTotal):
-                _swarmAll += pow(2, nn)
+            self.swarmAll = range(swarmMode[1])
+            for nn in self.swarmAll:
                 self.swarmModeButtonsList[nn]["state"] = tk.NORMAL
-            self.swarmAll = _swarmAll
+        else:
+            self.swarmAll = [0]
 
     def swarmControlCheckButtonChanged(self):
         self.swarmModeDronesList = [
@@ -391,7 +392,7 @@ class AutopilotController:
             self.drone5Var.get(),
             self.drone6Var.get(),
         ]
-        self.swarmNumber = sum([b << i for i, b in enumerate(self.swarmModeDronesList)])
+        self.swarmNumber = [index for index, value in enumerate(self.swarmModeDronesList) if value]
         self.myControlFrameClass.setSwarmDroneNumber(self.swarmNumber)
 
     def close(self):
