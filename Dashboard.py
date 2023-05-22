@@ -11,6 +11,7 @@ from dashboardClasses.LEDsControllerClass import LEDsController
 from dashboardClasses.CameraControllerClass import CameraController
 from dashboardClasses.AutopilotControllerClass import AutopilotController
 from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
+from dashboardClasses.FrameSelectorClass import FrameSelector
 
 
 class ConfigurationPanel:
@@ -238,6 +239,16 @@ class ConfigurationPanel:
             self.swarmModeOptionMenu.pack_forget()
 
     def closeButtonClicked(self):
+        global max_drones
+        global swarmModeActive
+        max_drones = 1
+        swarmModeActive = self.swarmModeState.get()
+        if swarmModeActive == "1":
+            swarmModeActive = True
+            max_drones = int(self.swarmModeNumber.get())
+
+        myFrameSelector.set_max_drones(max_drones)
+
         myAutopilotController.setSwarmMode(
             (int(self.swarmModeState.get()), int(self.swarmModeNumber.get()))
         )
@@ -276,11 +287,12 @@ def on_message(client, userdata, message):
     global table
     global originlat, originlon
     global new_window
+    global confPanel
 
     splited = message.topic.split("/")
     origin = splited[0]
     destination = splited[1]
-    command = splited[2]
+    command = splited[-1]
 
     if origin == "cameraService":
         if command == "videoFrame":
@@ -305,6 +317,10 @@ def on_message(client, userdata, message):
             # telemetry_info contains the state of the autopilot.
             # this is enough for the autopilot controller to decide what to do next
             telemetry_info = json.loads(message.payload)
+            drone_id = 0
+            if swarmModeActive is True:
+                drone_id = int(splited[-2])
+            myFrameSelector.myMapView.set_telemetry_info(drone_id, telemetry_info)
             myAutopilotController.showTelemetryInfo(telemetry_info)
 
     if origin == "dataService" and command == "storedPositions":
@@ -356,6 +372,8 @@ def configure(configuration_parameters):
 
 ############################################################################
 ############################################################################
+global max_drones
+global swarmModeActive
 
 master = tk.Tk()
 new_window = tk.Toplevel(master)
@@ -410,9 +428,9 @@ autopilotControlFrame.grid(
 
 
 # Camera control  frame ----------------------
-myCameraController = CameraController()
-cameraControlFrame = myCameraController.buildFrame(panelFrame)
-cameraControlFrame.grid(
+myFrameSelector = FrameSelector(panelFrame)
+myCameraController = myFrameSelector.myCameraController
+myFrameSelector.getFrame().grid(
     row=0, column=3, rowspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
 )
 
