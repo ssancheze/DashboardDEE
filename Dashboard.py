@@ -2,6 +2,7 @@ import base64
 import json
 
 import tkinter as tk
+from PIL import Image, ImageTk
 import cv2 as cv
 import numpy as np
 
@@ -12,6 +13,9 @@ from dashboardClasses.CameraControllerClass import CameraController
 from dashboardClasses.AutopilotControllerClass import AutopilotController
 from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
 from dashboardClasses.FrameSelectorClass import FrameSelector
+from ConnectionManagerClass import ConnectionManager
+
+_ABSOLUTE_DIR_PATH = __file__[:-12]
 
 
 class ConfigurationPanel:
@@ -21,6 +25,7 @@ class ConfigurationPanel:
         self.ParameterFrame = tk.Frame(fatherFrame)
         self.ParameterFrame.rowconfigure(0, weight=4)
         self.ParameterFrame.rowconfigure(1, weight=1)
+        self.ParameterFrame.rowconfigure(2, weight=1)
 
         self.ParameterFrame.columnconfigure(0, weight=1)
         self.ParameterFrame.columnconfigure(1, weight=1)
@@ -74,6 +79,36 @@ class ConfigurationPanel:
             value="global",
             command=self.communicationModeChanged,
         ).grid(row=1, sticky="W")
+
+        tk.Radiobutton(
+            self.communicationModeFrame,
+            text="direct",
+            variable=self.var2,
+            value="direct",
+            command=self.communicationModeChanged,
+        ).grid(row=2, sticky="W")
+
+        self.localModeFrame = tk.LabelFrame(
+            self.communicationModeFrame,
+            text="Local mode"
+        )
+
+        self.localModeVar = tk.IntVar(value=0)
+
+        tk.Radiobutton(
+            self.localModeFrame,
+            text='Onboard broker',
+            variable=self.localModeVar,
+            value=0,
+            command=self.communicationModeChanged
+        ).pack()
+        tk.Radiobutton(
+            self.localModeFrame,
+            text='Single broker',
+            variable=self.localModeVar,
+            value=1,
+            command=self.communicationModeChanged
+        ).pack()
 
         self.externalBrokerFrame = tk.LabelFrame(
             self.ParameterFrame, text="External broker"
@@ -185,8 +220,19 @@ class ConfigurationPanel:
         )
 
         self.closeButton.grid(
-            row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nesw"
+            row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nesw"
         )
+
+        self.global_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\global_scheme.png")
+                                             .resize((640, 360)))
+        self.local0_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local0_scheme.png")
+                                             .resize((640, 360)))
+        self.local1_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local1_scheme.png")
+                                             .resize((640, 360)))
+        self.direct_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\direct_scheme.png")
+                                             .resize((640, 360)))
+
+        self.commsModeImageContainer = tk.Label(self.ParameterFrame, image=self.local0_png, height=360, width=640)
 
         return self.ParameterFrame
 
@@ -198,9 +244,12 @@ class ConfigurationPanel:
 
     def communicationModeChanged(self):
         if self.var2.get() == "local":
+            self.localModeFrame.grid(row=3, sticky="W")
+
             for checkBox in self.dataServiceCheckBox:
                 checkBox.pack_forget()
         else:
+            self.localModeFrame.grid_forget()
             for checkBox in self.dataServiceCheckBox:
                 checkBox.pack()
 
@@ -216,6 +265,21 @@ class ConfigurationPanel:
             self.externalBrokerOption3.grid_forget()
             if self.var3.get() == "classpip.upc.edu":
                 self.credentialsFrame.grid_forget()
+
+        if self.var1.get() == 'simulation':
+            self.commsModeImageContainer.grid_forget()
+        else:
+            if self.var2.get() == 'global':
+                self.commsModeImageContainer.configure(image=self.global_png)
+            elif self.var2.get() == 'local':
+                if self.localModeVar.get() == 0:
+                    self.commsModeImageContainer.configure(image=self.local0_png)
+                elif self.localModeVar.get() == 1:
+                    self.commsModeImageContainer.configure(image=self.local1_png)
+            elif self.var2.get() == 'direct':
+                self.commsModeImageContainer.configure(image=self.direct_png)
+            self.commsModeImageContainer.grid(row=2, columnspan=6, padx=10, pady=10)
+
 
     def operationModeChanged(self):
         if self.var1.get() == "simulation" and self.var2.get() == "global":
@@ -263,12 +327,17 @@ class ConfigurationPanel:
             if self.dataServiceOptionsSelected[i].get() == "1":
                 dataServiceOptions.append(self.dataServiceOptions[i])
 
+        localMode = -1
+        if self.var2.get() == 'local':
+            localMode = self.localModeVar.get()
+
         parameters = {
             "operationMode": self.var1.get(),
             "communicationMode": self.var2.get(),
             "externalBroker": self.var3.get(),
             "monitorOptions": monitorOptions,
             "dataServiceOptions": dataServiceOptions,
+            "localMode": localMode
         }
         if self.var3.get() == "classpip.upc.edu":
             parameters["username"] = self.usernameBox.get()
@@ -334,7 +403,7 @@ def on_message(client, userdata, message):
 def configure(configuration_parameters):
     global panelFrame
     global client
-
+    """
     if configuration_parameters["communicationMode"] == "global":
         external_broker_address = configuration_parameters["externalBroker"]
     else:
@@ -342,15 +411,34 @@ def configure(configuration_parameters):
 
     # the external broker must run always in port 8000
     external_broker_port = 8000
+    """
+
+    operation_mode = configuration_parameters['communicationMode']
+    local_mode = configuration_parameters['localMode']
+    application_name = __file__.split('\\')[-1][:-3]
+    external_broker_address = configuration_parameters['externalBroker']
+    if external_broker_address == 'classpip.upc.edu':
+        broker_credentials = (configuration_parameters['username'], configuration_parameters['pass'])
+    else:
+        broker_credentials = None
+
+    myConnectionManager = ConnectionManager()
+    broker_addresses = myConnectionManager.setParameters(operation_mode,
+                                                         application_name,
+                                                         local_mode=local_mode,
+                                                         max_drones=max_drones,
+                                                         external_broker_address=external_broker_address,
+                                                         broker_credentials=broker_credentials)
 
     client = mqtt.Client("Dashboard", transport="websockets")
     client.on_message = on_message
-    if external_broker_address == "classpip.upc.edu":
+    if broker_addresses[0][0] == "classpip.upc.edu":
         client.username_pw_set(
             configuration_parameters["username"], configuration_parameters["pass"]
         )
-
-    client.connect(external_broker_address, external_broker_port)
+        client.connect(*broker_addresses[0][:-1])
+    else:
+        client.connect(*broker_addresses[0])
     client.loop_start()
     client.subscribe("+/dashBoard/#")
 
@@ -378,11 +466,10 @@ global swarmModeActive
 master = tk.Tk()
 new_window = tk.Toplevel(master)
 new_window.title("Configuration panel")
-new_window.geometry("900x300")
+new_window.geometry("900x600")
 confPanel = ConfigurationPanel()
 confPanelFrame = confPanel.buildFrame(new_window, configure)
 confPanelFrame.pack()
-
 
 master.title("Main window")
 master.geometry("1150x600")
@@ -408,7 +495,6 @@ closeButton = tk.Button(
 )
 closeButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
-
 # panel frame -------------------------------------------
 panelFrame = tk.Frame(master)
 panelFrame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
@@ -426,7 +512,6 @@ autopilotControlFrame.grid(
     row=0, column=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
 )
 
-
 # Camera control  frame ----------------------
 myFrameSelector = FrameSelector(panelFrame)
 myCameraController = myFrameSelector.myCameraController
@@ -437,7 +522,6 @@ myFrameSelector.getFrame().grid(
 # LEDs control frame ----------------------
 ledsControlFrame = LEDsController().buildFrame(panelFrame, client)
 ledsControlFrame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
-
 
 # Monitor control frame ----------------------
 monitorControlFrame = tk.LabelFrame(panelFrame, text="Monitor control")
