@@ -9,11 +9,10 @@ import numpy as np
 import paho.mqtt.client as mqtt
 
 from dashboardClasses.LEDsControllerClass import LEDsController
-from dashboardClasses.CameraControllerClass import CameraController
 from dashboardClasses.AutopilotControllerClass import AutopilotController
 from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
 from dashboardClasses.FrameSelectorClass import FrameSelector
-from ConnectionManagerClass import ConnectionManager
+from dashboardClasses.ConnectionManagerClass import ConnectionManager
 
 _ABSOLUTE_DIR_PATH = __file__[:-12]
 
