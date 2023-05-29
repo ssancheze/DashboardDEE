@@ -142,6 +142,20 @@ class ConfigurationPanel:
         )
         self.externalBrokerOption3.grid(row=2, sticky="W")
 
+        self.externalBrokerLocal0Frame = tk.LabelFrame(
+            self.ParameterFrame,
+            text='External broker'
+        )
+
+        self.externalBrokerLocal0Entries = (
+            tk.Entry(self.externalBrokerLocal0Frame),
+            tk.Entry(self.externalBrokerLocal0Frame),
+            tk.Entry(self.externalBrokerLocal0Frame),
+            tk.Entry(self.externalBrokerLocal0Frame),
+            tk.Entry(self.externalBrokerLocal0Frame),
+            tk.Entry(self.externalBrokerLocal0Frame)
+        )
+
         self.credentialsFrame = tk.LabelFrame(
             self.externalBrokerFrame, text="Credentials"
         )
@@ -245,14 +259,28 @@ class ConfigurationPanel:
         if self.var2.get() == "local":
             self.localModeFrame.grid(row=3, sticky="W")
 
+            if int(self.swarmModeState.get()) == 1:
+                activeDrones = int(self.swarmModeNumber.get())
+            else:
+                activeDrones = 1
+            for drone in range(activeDrones):
+                self.externalBrokerLocal0Entries[drone].pack()
+            self.externalBrokerFrame.grid_forget()
+            self.externalBrokerLocal0Frame.grid(row=0, column=2, padx=5, pady=5, sticky="nesw")
+
             for checkBox in self.dataServiceCheckBox:
                 checkBox.pack_forget()
         else:
+            for drone in self.externalBrokerLocal0Entries:
+                drone.pack_forget()
+            self.externalBrokerFrame.grid(row=0, column=2, padx=10, pady=10, sticky="nesw")
+            self.externalBrokerLocal0Frame.grid_forget()
+
             self.localModeFrame.grid_forget()
             for checkBox in self.dataServiceCheckBox:
                 checkBox.pack()
 
-        if self.var1.get() == "simulation" and self.var2.get() == "global":
+        if self.var2.get() == "global":
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
@@ -281,7 +309,7 @@ class ConfigurationPanel:
 
 
     def operationModeChanged(self):
-        if self.var1.get() == "simulation" and self.var2.get() == "global":
+        if self.var2.get() == "global":
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
@@ -330,10 +358,16 @@ class ConfigurationPanel:
         if self.var2.get() == 'local':
             localMode = self.localModeVar.get()
 
+        communicationMode = self.var2.get()
+        if communicationMode == "local" and self.localModeVar.get() == 0:
+            externalBroker = [self.externalBrokerLocal0Entries[drones].get() for drones in range(max_drones)]
+        else:
+            externalBroker = self.var3.get()
+
         parameters = {
             "operationMode": self.var1.get(),
             "communicationMode": self.var2.get(),
-            "externalBroker": self.var3.get(),
+            "externalBroker": externalBroker,
             "monitorOptions": monitorOptions,
             "dataServiceOptions": dataServiceOptions,
             "localMode": localMode
