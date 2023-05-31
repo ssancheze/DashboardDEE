@@ -12,7 +12,7 @@ from dashboardClasses.LEDsControllerClass import LEDsController
 from dashboardClasses.AutopilotControllerClass import AutopilotController
 from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
 from dashboardClasses.FrameSelectorClass import FrameSelector
-from dashboardClasses.ConnectionManagerClass import ConnectionManager
+from dashboardClasses.ConnectionManagerClass import ConnectionManager, _PROTECTED_BROKERS
 
 _ABSOLUTE_DIR_PATH = __file__[:-12]
 
@@ -250,7 +250,7 @@ class ConfigurationPanel:
         return self.ParameterFrame
 
     def credentialsToggle(self):
-        if self.var3.get() == "classpip.upc.edu":
+        if self.var3.get() in _PROTECTED_BROKERS:
             self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.credentialsFrame.grid_forget()
@@ -284,13 +284,13 @@ class ConfigurationPanel:
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
-            if self.var3.get() == "classpip.upc.edu":
+            if self.var3.get() in _PROTECTED_BROKERS:
                 self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.externalBrokerOption1.grid_forget()
             self.externalBrokerOption2.grid_forget()
             self.externalBrokerOption3.grid_forget()
-            if self.var3.get() == "classpip.upc.edu":
+            if self.var3.get() in _PROTECTED_BROKERS:
                 self.credentialsFrame.grid_forget()
 
         if self.var1.get() == 'simulation':
@@ -307,19 +307,18 @@ class ConfigurationPanel:
                 self.commsModeImageContainer.configure(image=self.direct_png)
             self.commsModeImageContainer.grid(row=2, columnspan=6, padx=10, pady=10)
 
-
     def operationModeChanged(self):
         if self.var2.get() == "global":
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
-            if self.var3.get() == "classpip.upc.edu":
+            if self.var3.get() in _PROTECTED_BROKERS:
                 self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.externalBrokerOption1.grid_forget()
             self.externalBrokerOption2.grid_forget()
             self.externalBrokerOption3.grid_forget()
-            if self.var3.get() == "classpip.upc.edu":
+            if self.var3.get() in _PROTECTED_BROKERS:
                 self.credentialsFrame.grid_forget()
 
     def swarmModeButtonClicked(self):
@@ -372,7 +371,7 @@ class ConfigurationPanel:
             "dataServiceOptions": dataServiceOptions,
             "localMode": localMode
         }
-        if self.var3.get() == "classpip.upc.edu":
+        if self.var3.get() in _PROTECTED_BROKERS:
             parameters["username"] = self.usernameBox.get()
             parameters["pass"] = self.passBox.get()
 
@@ -427,6 +426,7 @@ def on_message(client, userdata, message):
 
     if origin == "dataService" and command == "storedPositions":
         # receive the positions stored by the data service
+
         data = message.payload.decode("utf-8")
         # converts received string to json
         data_json = json.loads(data)
@@ -450,28 +450,24 @@ def configure(configuration_parameters):
     local_mode = configuration_parameters['localMode']
     application_name = __file__.split('\\')[-1][:-3]
     external_broker_address = configuration_parameters['externalBroker']
-    if external_broker_address == 'classpip.upc.edu':
+    if 'pass' in configuration_parameters.keys():
         broker_credentials = (configuration_parameters['username'], configuration_parameters['pass'])
     else:
         broker_credentials = None
 
     myConnectionManager = ConnectionManager()
-    broker_addresses = myConnectionManager.setParameters(operation_mode,
-                                                         application_name,
-                                                         local_mode=local_mode,
-                                                         max_drones=max_drones,
-                                                         external_broker_address=external_broker_address,
-                                                         broker_credentials=broker_credentials)
+    broker_settings = myConnectionManager.setParameters(operation_mode,
+                                                        application_name,
+                                                        local_mode=local_mode,
+                                                        max_drones=max_drones,
+                                                        external_broker_address=external_broker_address,
+                                                        broker_credentials=broker_credentials)
 
     client = mqtt.Client("Dashboard", transport="websockets")
     client.on_message = on_message
-    if broker_addresses[0][0] == "classpip.upc.edu":
-        client.username_pw_set(
-            configuration_parameters["username"], configuration_parameters["pass"]
-        )
-        client.connect(*broker_addresses[0][:-1])
-    else:
-        client.connect(*broker_addresses[0])
+    if 'credentials' in broker_settings['external'].keys():
+        client.username_pw_set(*broker_settings['external']['credentials'])
+    client.connect(host=broker_settings['external']['address'], port=broker_settings['external']['port'])
     client.loop_start()
     client.subscribe("+/dashBoard/#")
 
