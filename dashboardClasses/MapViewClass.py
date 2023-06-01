@@ -122,6 +122,31 @@ class Map:
 if __name__ == "__main__":
     testMaster = tk.Tk()
     testMaster.title = "DEBUG"
-    mapViewClass = MapViewHandler(testMaster, 1)
+    mapViewClass = MapViewHandler(testMaster)
+
+    telemetry_info1 = {
+        'lat': 41.27630767131425,
+        'lon': 1.9886698469838262,
+        'heading': 270,
+        'groundSpeed': 6,
+        'altitude': 10,
+        'battery': 37,
+        'state': 'flying'
+    }
+
+    telemetry_info2 = {
+        'lat': 41.276485,
+        'lon': 1.988801,
+        'heading': 270,
+        'groundSpeed': 6,
+        'altitude': 10,
+        'battery': 37,
+        'state': 'takingOff'
+    }
+
+    mapViewClass.set_max_drones(2)
+    mapViewClass.set_telemetry_info(0, telemetry_info1)
+    mapViewClass.set_telemetry_info(1, telemetry_info2)
     mapViewClass.getFrame().pack()
+
     testMaster.mainloop()
