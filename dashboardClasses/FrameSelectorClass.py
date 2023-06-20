@@ -4,7 +4,7 @@ from dashboardClasses.MapViewClass import MapViewHandler
 
 
 class FrameSelector:
-    def __init__(self, parent):
+    def __init__(self, parent, operation_drones):
         # Main frame hosting everything
         self.masterFrame = tk.Frame(parent, padx=5, pady=5)
         self.masterFrame.rowconfigure(0, weight=4)
@@ -16,7 +16,7 @@ class FrameSelector:
         # Frame hosting camera / map
         """self.contentFrame = tk.LabelFrame(self.masterFrame, text="Camera control", padx=5, pady=5)
         self.contentFrame.grid(column=0, sticky=tk.N + tk.S + tk.E + tk.W)"""
-        self.myMapView = MapViewHandler(self.masterFrame)
+        self.myMapView = MapViewHandler(self.masterFrame, operation_drones)
         mapViewFrame = self.myMapView.getFrame()
         mapViewFrame.grid(row=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
 
@@ -40,9 +40,6 @@ class FrameSelector:
 
     def getFrame(self):
         return self.masterFrame
-
-    def set_max_drones(self, max_drones):
-        self.myMapView.set_max_drones(max_drones)
 
 
 if __name__ == "__main__":
