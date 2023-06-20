@@ -1,3 +1,4 @@
+import atexit
 import base64
 import json
 
@@ -12,7 +13,9 @@ from dashboardClasses.LEDsControllerClass import LEDsController
 from dashboardClasses.AutopilotControllerClass import AutopilotController
 from dashboardClasses.ShowRecordedPositionsClass import RecordedPositionsWindow
 from dashboardClasses.FrameSelectorClass import FrameSelector
-from dashboardClasses.ConnectionManagerClass import ConnectionManager, _PROTECTED_BROKERS
+from dashboardClasses.ConnectionManagerClass import ConnectionManager, PROTECTED_BROKERS
+from dashboardClasses.DroneClass import OperationDrones
+import dashboardClasses.NewAutopilotService as NewAutopilotService
 
 _ABSOLUTE_DIR_PATH = __file__[:-12]
 
@@ -218,6 +221,14 @@ class ConfigurationPanel:
         )
         self.swarmModeButton.pack()
 
+        self.rcChecksVar = tk.BooleanVar(value=True)
+        self.rcChecksButton = tk.Checkbutton(
+            self.swarmModeFrame,
+            text='RC checks',
+            variable=self.rcChecksVar
+        )
+        self.rcChecksButton.pack()
+
         optionList = ("2", "3", "4", "5", "6")
         self.swarmModeNumber = tk.StringVar(value="2")
         self.swarmModeOptionMenu = tk.OptionMenu(
@@ -250,7 +261,7 @@ class ConfigurationPanel:
         return self.ParameterFrame
 
     def credentialsToggle(self):
-        if self.var3.get() in _PROTECTED_BROKERS:
+        if self.var3.get() in PROTECTED_BROKERS:
             self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.credentialsFrame.grid_forget()
@@ -284,13 +295,13 @@ class ConfigurationPanel:
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
-            if self.var3.get() in _PROTECTED_BROKERS:
+            if self.var3.get() in PROTECTED_BROKERS:
                 self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.externalBrokerOption1.grid_forget()
             self.externalBrokerOption2.grid_forget()
             self.externalBrokerOption3.grid_forget()
-            if self.var3.get() in _PROTECTED_BROKERS:
+            if self.var3.get() in PROTECTED_BROKERS:
                 self.credentialsFrame.grid_forget()
 
         if self.var1.get() == 'simulation':
@@ -312,13 +323,13 @@ class ConfigurationPanel:
             self.externalBrokerOption1.grid(row=0, sticky="W")
             self.externalBrokerOption2.grid(row=1, sticky="W")
             self.externalBrokerOption3.grid(row=2, sticky="W")
-            if self.var3.get() in _PROTECTED_BROKERS:
+            if self.var3.get() in PROTECTED_BROKERS:
                 self.credentialsFrame.grid(row=3, sticky="W")
         else:
             self.externalBrokerOption1.grid_forget()
             self.externalBrokerOption2.grid_forget()
             self.externalBrokerOption3.grid_forget()
-            if self.var3.get() in _PROTECTED_BROKERS:
+            if self.var3.get() in PROTECTED_BROKERS:
                 self.credentialsFrame.grid_forget()
 
     def swarmModeButtonClicked(self):
@@ -336,8 +347,6 @@ class ConfigurationPanel:
         if swarmModeActive == "1":
             swarmModeActive = True
             max_drones = int(self.swarmModeNumber.get())
-
-        myFrameSelector.set_max_drones(max_drones)
 
         myAutopilotController.setSwarmMode(
             (int(self.swarmModeState.get()), int(self.swarmModeNumber.get()))
@@ -369,9 +378,11 @@ class ConfigurationPanel:
             "externalBroker": externalBroker,
             "monitorOptions": monitorOptions,
             "dataServiceOptions": dataServiceOptions,
-            "localMode": localMode
+            "localMode": localMode,
+            'max_drones': max_drones,
+            'rc_checks': self.rcChecksVar.get(),
         }
-        if self.var3.get() in _PROTECTED_BROKERS:
+        if self.var3.get() in PROTECTED_BROKERS:
             parameters["username"] = self.usernameBox.get()
             parameters["pass"] = self.passBox.get()
 
@@ -421,8 +432,11 @@ def on_message(client, userdata, message):
             drone_id = 0
             if swarmModeActive is True:
                 drone_id = int(splited[-2])
-            myFrameSelector.myMapView.set_telemetry_info(drone_id, telemetry_info)
-            myAutopilotController.showTelemetryInfo(telemetry_info)
+            operation_drones.set_telemetry_info(telemetry_info, drone_id)
+            myFrameSelector.myMapView.update_drone(drone_id)
+            if drone_id == myFrameSelector.myMapView.selected_drone:
+                myAutopilotController.raiseTelemetryFrame(drone_id)
+            myAutopilotController.showTelemetryInfo(telemetry_info, drone_id)
 
     if origin == "dataService" and command == "storedPositions":
         # receive the positions stored by the data service
@@ -433,18 +447,13 @@ def on_message(client, userdata, message):
         myRecordedPositionsWindow.putStoredPositions(data_json)
 
 
+autoBootInstances: NewAutopilotService.AutoBoot = None
+
+
 def configure(configuration_parameters):
     global panelFrame
     global client
-    """
-    if configuration_parameters["communicationMode"] == "global":
-        external_broker_address = configuration_parameters["externalBroker"]
-    else:
-        external_broker_address = "localhost"
-
-    # the external broker must run always in port 8000
-    external_broker_port = 8000
-    """
+    global autoBootInstances
 
     operation_mode = configuration_parameters['communicationMode']
     local_mode = configuration_parameters['localMode']
@@ -462,6 +471,18 @@ def configure(configuration_parameters):
                                                         max_drones=max_drones,
                                                         external_broker_address=external_broker_address,
                                                         broker_credentials=broker_credentials)
+
+    if broker_credentials is not None:
+        apsUsername, apsPassword = broker_credentials
+    else:
+        apsUsername, apsPassword = None, None
+
+    autoBootInstances = NewAutopilotService.AutoBoot()
+    autoBootInstances.autoBoot(configuration_parameters['communicationMode'], configuration_parameters['operationMode'],
+                               external_broker_address, apsUsername, apsPassword, max_drones, verbose=True)
+
+    if configuration_parameters['rc_checks'] is False:
+        autoBootInstances.disable_rc_checks()
 
     client = mqtt.Client("Dashboard", transport="websockets")
     client.on_message = on_message
@@ -483,6 +504,11 @@ def configure(configuration_parameters):
     myCameraController.putClient(client)
     myAutopilotController.putClient(client)
     myRecordedPositionsWindow.putClient(client)
+
+    operation_drones.set_active(configuration_parameters['max_drones'])
+    myAutopilotController.operation_drones_max_drones_defined()
+    myFrameSelector.myMapView.operation_drones_max_drones_defined()
+
     # this is to maximize the main window
     master.deiconify()
 
@@ -505,6 +531,7 @@ master.geometry("1150x600")
 master.rowconfigure(0, weight=1)
 master.rowconfigure(1, weight=15)
 client = None
+operation_drones = OperationDrones()
 # this is to minimize the master window so that the configuration window can be seen
 master.iconify()
 
@@ -535,14 +562,14 @@ panelFrame.rowconfigure(0, weight=4)
 panelFrame.rowconfigure(1, weight=1)
 
 # Autopilot control frame ----------------------
-myAutopilotController = AutopilotController()
+myAutopilotController = AutopilotController(operation_drones)
 autopilotControlFrame = myAutopilotController.buildFrame(panelFrame)
 autopilotControlFrame.grid(
     row=0, column=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
 )
 
 # Camera control  frame ----------------------
-myFrameSelector = FrameSelector(panelFrame)
+myFrameSelector = FrameSelector(panelFrame, operation_drones)
 myCameraController = myFrameSelector.myCameraController
 myFrameSelector.getFrame().grid(
     row=0, column=3, rowspan=2, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
@@ -599,3 +626,5 @@ showRecordedPositionsButton = tk.Button(
 showRecordedPositionsButton.pack(pady=5)
 
 master.mainloop()
+
+atexit.register(autoBootInstances.reset_rc_checks)
