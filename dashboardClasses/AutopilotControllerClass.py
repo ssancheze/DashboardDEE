@@ -12,6 +12,9 @@ from dashboardClasses.TelemetryInfoFrameClass import TelemetryInfoFrame
 
 
 class AutopilotController:
+    def __init__(self, operation_drones):
+        self.operation_drones = operation_drones
+
     def buildFrame(self, frame):
 
         self.swarmNumber = [0]
@@ -45,16 +48,15 @@ class AutopilotController:
         )
 
         # Telemetry info ----------------------
-        self.myTelemetryInfoFrameClass = TelemetryInfoFrame()
-        self.telemetryInfoFrame = self.myTelemetryInfoFrameClass.buldFrame(
-            self.autopilotControlFrame
-        )
-        self.telemetryInfoFrame.grid(
-            row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W
-        )
-
+        self.myTelemetryInfoFrameClass = [TelemetryInfoFrame(0), ]
+        self.telemetryInfoFrame = [self.myTelemetryInfoFrameClass[0].buildFrame(self.autopilotControlFrame)]
+        self.telemetryInfoFrame[0].grid(
+                row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W
+            )
+        self.telemetryInfoFrame[0].tkraise()
+        self.raisedFrame = 0
         # Control ----------------------
-        self.myControlFrameClass = ControlFrame()
+        self.myControlFrameClass = ControlFrame(self.operation_drones)
         self.myControlFrame = self.myControlFrameClass.buldFrame(
             self.autopilotControlFrame
         )
@@ -184,16 +186,21 @@ class AutopilotController:
 
     def connect_button_clicked(self):
         if self.connectButton["text"] == "Connect":
-            for droneId in self.swarmAll:
-                self.client.publish("dashBoard/autopilotService/"+str(droneId)+"/connect")
+            for drone_id in self.swarmAll:
+                drone = self.operation_drones.drones[drone_id]
+                self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/connect")
+                self.operation_drones.set_connected(drone_id, True)
+
             self.connectButton["text"] = "Connecting ..."
             self.connectButton["bg"] = "orange"
 
         else:
-            if not self.myControlFrameClass.isOnAir():
-                for droneId in self.swarmAll:
-                    self.client.publish("dashBoard/autopilotService/"+str(droneId)+"/disconnect/")
-                self.myControlFrameClass.setDisconnected()
+            if self.operation_drones.on_air < 0:
+                for drone_id in self.swarmAll:
+                    drone = self.operation_drones.drones[drone_id]
+                    if not drone.on_air and not drone.armed:
+                        self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/disconnect")
+                        self.operation_drones.set_connected(drone_id, False)
                 self.connected = False
                 self.connectButton["text"] = "Connect"
                 self.connectButton["bg"] = "red"
@@ -206,13 +213,26 @@ class AutopilotController:
         self.client = client
         self.myControlFrameClass.putClient(self.client)
 
-    def showTelemetryInfo(self, telemetry_info):
-        self.myTelemetryInfoFrameClass.showTelemetryInfo(telemetry_info)
-        if self.flightPlanDesignerWindow != None:
-            self.flightPlanDesignerWindow.showTelemetryInfo(telemetry_info)
-        self.myControlFrameClass.setState(telemetry_info["state"])
+    def operation_drones_max_drones_defined(self):
+        if len(self.operation_drones.drones) > 1:
+            for drone_id in range(1, self.operation_drones.max_drones):
+                telemetry_frame_class = TelemetryInfoFrame(drone_id)
+                self.myTelemetryInfoFrameClass.append(telemetry_frame_class)
+                telemetry_frame = telemetry_frame_class.buildFrame(self.autopilotControlFrame)
+                telemetry_frame.grid(row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W)
+                self.telemetryInfoFrame.append(telemetry_frame)
 
-        if telemetry_info["state"] == "connected" and not self.connected:
+    def raiseTelemetryFrame(self, _id):
+        self.telemetryInfoFrame[_id].tkraise()
+        self.raisedFrame = _id
+
+    def showTelemetryInfo(self, telemetry_info, drone_id):
+        if self.raisedFrame == drone_id:
+            self.myTelemetryInfoFrameClass[drone_id].showTelemetryInfo(telemetry_info)
+        if self.flightPlanDesignerWindow is not None:
+            self.flightPlanDesignerWindow.showTelemetryInfo(telemetry_info)
+
+        if telemetry_info["state"] == "connected" and self.operation_drones.connected == 1:
             self.connected = True
             self.connectButton["text"] = "Disconnect"
             self.connectButton["bg"] = "green"
