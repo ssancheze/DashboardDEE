@@ -343,7 +343,7 @@ class FlightPlanDesignerWindow:
         self.wpFrame.grid(row=1, column=2, padx=10)
 
         self.myTelemetryInfoFrameClass = TelemetryInfoFrame()
-        self.telemetryInfoFrame = self.myTelemetryInfoFrameClass.buldFrame(
+        self.telemetryInfoFrame = self.myTelemetryInfoFrameClass.buildFrame(
             self.newWindow
         )
         self.telemetryInfoFrame.grid(row=2, column=2, padx=10)
