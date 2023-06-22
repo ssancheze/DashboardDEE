@@ -187,7 +187,6 @@ class AutopilotController:
     def connect_button_clicked(self):
         if self.connectButton["text"] == "Connect":
             for drone_id in self.swarmAll:
-                drone = self.operation_drones.drones[drone_id]
                 self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/connect")
                 self.operation_drones.set_connected(drone_id, True)
 
@@ -198,12 +197,17 @@ class AutopilotController:
             if self.operation_drones.on_air < 0:
                 for drone_id in self.swarmAll:
                     drone = self.operation_drones.drones[drone_id]
-                    if not drone.on_air and not drone.armed:
+                    if drone.on_air or drone.armed:
+                        return
+                    else:
                         self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/disconnect")
+                        drone.telemetry_info['state'] = 'disconnected'
                         self.operation_drones.set_connected(drone_id, False)
-                self.connected = False
-                self.connectButton["text"] = "Connect"
-                self.connectButton["bg"] = "red"
+
+                if self.operation_drones.connected < 0:
+                    self.connected = False
+                    self.connectButton["text"] = "Connect"
+                    self.connectButton["bg"] = "red"
             else:
                 messagebox.showwarning(
                     "Warning", "No puedes desconectar. Estás volando"
