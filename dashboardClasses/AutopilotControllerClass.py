@@ -194,7 +194,7 @@ class AutopilotController:
             self.connectButton["bg"] = "orange"
 
         else:
-            if self.operation_drones.on_air < 0:
+            if self.operation_drones.on_air < 0 and self.operation_drones.armed < 0:
                 for drone_id in self.swarmAll:
                     drone = self.operation_drones.drones[drone_id]
                     if drone.on_air or drone.armed:
