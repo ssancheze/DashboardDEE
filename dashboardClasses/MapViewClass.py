@@ -15,6 +15,7 @@ TK_STATE_COLORS = {
     'returningHome': 'red4',
     'landing': 'red4',
     'onHearth': 'green',
+    'disconnected': 'grey'
 }
 # CROSSHAIR SIZE USED FOR DISPLAY IN MAP
 _CROSSHAIR_SIZE = 10
@@ -114,6 +115,7 @@ class Crosshair:
     def set_visibility(self, map_canvas, visibility):
         self.visibility = visibility
         map_canvas.itemconfig(self.id, state=visibility)
+        map_canvas.itemconfig(self.canvas_tag, state=visibility)
 
     def set_position(self, map_canvas, position):
         self.position = position
@@ -145,15 +147,12 @@ class MapDrone:
             self.crosshair.set_canvas_tag(map_canvas, self.drone_id)
         # Update its position
         if self.drone.telemetry_info:
+            if self.crosshair.visibility == tk.HIDDEN:
+                self.crosshair.set_visibility(map_canvas, tk.NORMAL)
             position = coordinates.ll_to_xy(self.drone.telemetry_info["lat"], self.drone.telemetry_info["lon"])
             self.crosshair.set_position(map_canvas, position)
             # Set its fill color
             self.crosshair.set_fill_color(map_canvas, TK_STATE_COLORS[self.drone.telemetry_info['state']])
-            # Set its visibility
-            if self.drone.telemetry_info["state"] == "disconnected":
-                self.crosshair.set_visibility(map_canvas, tk.HIDDEN)
-            else:
-                self.crosshair.set_visibility(map_canvas, tk.NORMAL)
 
     def set_mapViewHandler_selected_drone(self, _id):
         self.mapViewHandler.set_selected_drone(_id)

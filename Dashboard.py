@@ -438,6 +438,12 @@ def on_message(client, userdata, message):
                 myAutopilotController.raiseTelemetryFrame(drone_id)
             myAutopilotController.showTelemetryInfo(telemetry_info, drone_id)
 
+        elif command == "disconnectAck":
+            drone_id = 0
+            if swarmModeActive is True:
+                drone_id = int(splited[-2])
+            myFrameSelector.myMapView.update_drone(drone_id)
+
     if origin == "dataService" and command == "storedPositions":
         # receive the positions stored by the data service
 
@@ -627,4 +633,4 @@ showRecordedPositionsButton.pack(pady=5)
 
 master.mainloop()
 
-atexit.register(autoBootInstances.reset_rc_checks)
+atexit.register(autoBootInstances.disconnect_instances)
