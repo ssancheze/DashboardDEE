@@ -371,6 +371,39 @@ class AutopilotInstance:
             time.sleep(1)
         self.state = 'onHearth'
 
+    def connect_vehicle(self, origin):
+        if self.verbose:
+            print("Autopilot service connected by " + origin)
+        _baud_rate = 115200
+        if self.operation_mode == 'simulation':
+            connection_string = "tcp:127.0.0.1:" + str(5763 + self.drone_identifier * 10)
+        else:
+            if self.connection_mode == 'direct':
+                connection_string = f"com{self.direct_com_port}"
+                _baud_rate = 57600
+            else:
+                connection_string = "/dev/ttyS0"
+
+        if self.verbose:
+            print(f'Connecting to {connection_string}')
+
+        self.vehicle = connect(connection_string, wait_ready=False, baud=_baud_rate)
+        self.vehicle.wait_ready(True, timeout=5000)
+
+        if self.verbose:
+            print(f'Vehicle {self.vehicle.__str__()} is ready')
+            print(f'AutopilotService{self.drone_identifier_string} Connected to flight controller')
+        self.state = 'connected'
+
+    def disconnect_vehicle(self):
+        if self.state != 'disconnected':
+            self.reset_rc_checks()
+            # external_client.publish(sending_topic + "/connected", json.dumps(get_telemetry_info()))
+            self.vehicle.close()
+            self.sending_telemetry_info = False
+            self.state = 'disconnected'
+            self.external_client.publish(self.sending_topic + self.drone_identifier_string + "/disconnectAck")
+
     def process_message(self, message, client):
         if self.verbose:
             print(f'Received: {message.topic}')
@@ -388,28 +421,7 @@ class AutopilotInstance:
 
         if command == "connect":
             if self.state == 'disconnected':
-                if self.verbose:
-                    print("Autopilot service connected by " + origin)
-                _baud_rate = 115200
-                if self.operation_mode == 'simulation':
-                    connection_string = "tcp:127.0.0.1:" + str(5763 + self.drone_identifier * 10)
-                else:
-                    if self.connection_mode == 'direct':
-                        connection_string = f"com{self.direct_com_port}"
-                        _baud_rate = 57600
-                    else:
-                        connection_string = "/dev/ttyS0"
-
-                if self.verbose:
-                    print(f'Connecting to {connection_string}')
-
-                self.vehicle = connect(connection_string, wait_ready=False, baud=_baud_rate)
-                self.vehicle.wait_ready(True, timeout=5000)
-
-                if self.verbose:
-                    print(f'Vehicle {self.vehicle.__str__()} is ready')
-                    print(f'AutopilotService{self.drone_identifier_string} Connected to flight controller')
-                self.state = 'connected'
+                self.connect_vehicle(origin)
 
                 if self.rc_checks:
                     self.reset_rc_checks()
@@ -424,9 +436,7 @@ class AutopilotInstance:
                 print('Autopilot already connected')
 
         if command == "disconnect":
-            self.vehicle.close()
-            self.sending_telemetry_info = False
-            self.state = 'disconnected'
+            self.disconnect_vehicle()
 
         if command == "takeOff":
             self.state = 'takingOff'
@@ -494,13 +504,19 @@ class AutopilotInstance:
         self.disable_rc_check()
         self.disable_thr_fs_check()
         if self.verbose:
-            print(f'Drone #{self.drone_identifier}: RC checks disabled')
+            print(f'Drone #{self.drone_identifier}: RC checks disabled\n')
 
     def reset_rc_checks(self):
-        self.reset_rc_check()
-        self.reset_thr_fs_check()
+        if self.state == 'disconnected':
+            self.connect_vehicle('dashBoard')
+            self.reset_rc_check()
+            self.reset_thr_fs_check()
+            self.disconnect_vehicle()
+        else:
+            self.reset_rc_check()
+            self.reset_thr_fs_check()
         if self.verbose:
-            print(f'Drone #{self.drone_identifier}: RC checks reset')
+            print(f'Drone #{self.drone_identifier}: RC checks reset\n')
 
     def attr_listen(self, innerself, attr_name, value):
         def armed_change(innerself, attr_name, value):
@@ -624,6 +640,10 @@ class AutoBoot:
         for autopilotInstance in self.myInstances:
             autopilotInstance.rc_checks = True
             autopilotInstance.reset_rc_checks()
+
+    def disconnect_instances(self):
+        for autopilotInstance in self.myInstances:
+            autopilotInstance.disconnect_vehicle()
 
 
 if __name__ == '__main__':
