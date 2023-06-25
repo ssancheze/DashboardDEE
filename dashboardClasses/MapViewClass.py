@@ -70,6 +70,11 @@ class MapViewHandler:
     def operation_drones_max_drones_defined(self):
         self.map_drones = [MapDrone(drone, _id, self) for _id, drone in enumerate(self.operation_drones.drones)]
 
+    def grey_out(self, _id):
+        self.map_drones[_id].crosshair.set_fill_color(
+            self.map_canvas,
+            TK_STATE_COLORS['disconnected'])
+
 
 class Coordinates:
     def __init__(self):
