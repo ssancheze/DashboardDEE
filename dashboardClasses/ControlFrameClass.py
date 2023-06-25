@@ -209,17 +209,6 @@ class ControlFrame:
         print(swarmNumber)
         self.swarmNumber = swarmNumber
 
-    #    def getLogicList(self):
-    #        return [((self.swarmNumber >> n) & 1) for n in range(6)]
-    #
-    #    def getIndexes(self):
-    #        logicList = self.getLogicList()
-    #        trueArr = []
-    #        for nn in range(len(logicList)):
-    #            if logicList[nn] == 1:
-    #                trueArr.append(nn)
-    #        return trueArr
-
     def _setState(self, _list, _val):
         for _index in self.swarmNumber:
             _list[_index] = _val
