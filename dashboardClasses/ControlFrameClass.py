@@ -6,7 +6,7 @@ class ControlFrame:
     def __init__(self, operation_drones):
         self.operation_drones = operation_drones
 
-    def buldFrame(self, fatherFrame):
+    def buildFrame(self, fatherFrame):
         self.controlFrame = tk.LabelFrame(fatherFrame, text="Control")
 
         self.controlFrame.rowconfigure(0, weight=1)
@@ -368,42 +368,3 @@ class ControlFrame:
                     self.client.publish("dashBoard/LEDsService/" + str(drone_id) + "/drop")
         else:
             messagebox.showwarning("Warning", "No estas volando")
-
-    """
-    def setState(self, state):
-        for droneId in self.swarmNumber:
-            if self.state[droneId] != state:
-                self.state[droneId] = state
-                if self.state[droneId] == "connected":
-                    self.connected[droneId] = True
-                if self.state[droneId] == "arming":
-                    self.armButton["text"] = "Arming ..."
-                    self.armButton["bg"] = "orange"
-                elif self.state[droneId] == "armed":
-                    self.armButton["text"] = "Disarm"
-                    self.armButton["bg"] = "green"
-                elif self.state[droneId] == "disarmed":
-                    self.armButton["text"] = "Arm"
-                    self.armButton["bg"] = "red"
-                elif self.state[droneId] == "flying":
-                    self.takeOffButton["text"] = "Flying"
-                    self.takeOffButton["bg"] = "green"
-                elif self.state[droneId] == "onHearth":
-                    self.LandButton["text"] = "Land"
-                    self.LandButton["bg"] = "red"
-                    self.onAir[droneId] = False
-                    self.takeOffButton["text"] = "TakeOff"
-                    self.takeOffButton["bg"] = "red"
-                    self.armButton["text"] = "Arm"
-                    self.armButton["bg"] = "red"
-                    self.RTLButton["text"] = "RTL"
-                    self.RTLButton["bg"] = "red"
-
-    def isOnAir(self):
-        return any(self.onAir)
-        # Checks all drones rather than those selected
-
-    def setDisconnected(self):
-        for n in self.connected:
-            self.connected[n] = False
-    """

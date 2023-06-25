@@ -57,7 +57,7 @@ class AutopilotController:
         self.raisedFrame = 0
         # Control ----------------------
         self.myControlFrameClass = ControlFrame(self.operation_drones)
-        self.myControlFrame = self.myControlFrameClass.buldFrame(
+        self.myControlFrame = self.myControlFrameClass.buildFrame(
             self.autopilotControlFrame
         )
         self.myControlFrame.grid(
