@@ -435,15 +435,17 @@ def on_message(client, userdata, message):
                 drone_id = int(splited[-2])
             operation_drones.set_telemetry_info(telemetry_info, drone_id)
             myFrameSelector.myMapView.update_drone(drone_id)
+            if myFrameSelector.myMapView.selected_drone != myAutopilotController.raisedFrame:
+                myAutopilotController.raiseTelemetryFrame(myFrameSelector.myMapView.selected_drone)
             if drone_id == myFrameSelector.myMapView.selected_drone:
-                myAutopilotController.raiseTelemetryFrame(drone_id)
-            myAutopilotController.showTelemetryInfo(telemetry_info, drone_id)
+                myAutopilotController.showTelemetryInfo(telemetry_info, drone_id)
 
         elif command == "disconnectAck":
             drone_id = 0
             if swarmModeActive is True:
                 drone_id = int(splited[-2])
             myFrameSelector.myMapView.update_drone(drone_id)
+            myFrameSelector.myMapView.grey_out(drone_id)
 
     if origin == "dataService" and command == "storedPositions":
         # receive the positions stored by the data service
