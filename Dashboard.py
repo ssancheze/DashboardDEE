@@ -16,6 +16,7 @@ from dashboardClasses.FrameSelectorClass import FrameSelector
 from dashboardClasses.ConnectionManagerClass import ConnectionManager, PROTECTED_BROKERS
 from dashboardClasses.DroneClass import OperationDrones
 import dashboardClasses.NewAutopilotService as NewAutopilotService
+import dashboardClasses.BrokerHandlerClass
 
 _ABSOLUTE_DIR_PATH = __file__[:-12]
 
@@ -540,6 +541,8 @@ client = None
 operation_drones = OperationDrones()
 # this is to minimize the master window so that the configuration window can be seen
 master.iconify()
+# Mosquitto servers
+dashboardClasses.BrokerHandlerClass.start()
 
 
 def close_button_clicked():
@@ -634,3 +637,4 @@ showRecordedPositionsButton.pack(pady=5)
 master.mainloop()
 
 atexit.register(autoBootInstances.disconnect_instances)
+atexit.register(dashboardClasses.BrokerHandlerClass.stop)
