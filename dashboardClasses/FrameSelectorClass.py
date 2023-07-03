@@ -18,22 +18,43 @@ class FrameSelector:
         self.contentFrame.grid(column=0, sticky=tk.N + tk.S + tk.E + tk.W)"""
         self.myMapView = MapViewHandler(self.masterFrame, operation_drones)
         mapViewFrame = self.myMapView.getFrame()
-        mapViewFrame.grid(row=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+        mapViewFrame.grid(
+            row=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
         self.myCameraController = CameraController()
         cameraControllerFrame = self.myCameraController.buildFrame(self.masterFrame)
-        cameraControllerFrame.grid(row=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+        cameraControllerFrame.grid(
+            row=0, columnspan=3, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
         # Frame hosting selector buttons
-        self.cameraControllerButton = tk.Button(self.masterFrame, text="<", bg="red", fg="white",
-                                                command=lambda: self.showFrame(0))
-        self.cameraControllerButton.grid(row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+        self.cameraControllerButton = tk.Button(
+            self.masterFrame,
+            text="<",
+            bg="red",
+            fg="white",
+            command=lambda: self.showFrame(0),
+        )
+        self.cameraControllerButton.grid(
+            row=1, column=0, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
-        self.mapViewButton = tk.Button(self.masterFrame, text=">", bg="red", fg="white",
-                                       command=lambda: self.showFrame(1))
-        self.mapViewButton.grid(row=1, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W)
+        self.mapViewButton = tk.Button(
+            self.masterFrame,
+            text=">",
+            bg="red",
+            fg="white",
+            command=lambda: self.showFrame(1),
+        )
+        self.mapViewButton.grid(
+            row=1, column=1, padx=5, pady=5, sticky=tk.N + tk.S + tk.E + tk.W
+        )
 
-        self.frames = (cameraControllerFrame, mapViewFrame,)
+        self.frames = (
+            cameraControllerFrame,
+            mapViewFrame,
+        )
 
     def showFrame(self, frame):
         self.frames[frame].tkraise()

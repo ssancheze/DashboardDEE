@@ -6,9 +6,9 @@ _INNER_BROKER_ADDRESS = "localhost"
 _INNER_BROKER_PORT = 1884
 
 # Apps of the DEE used by the ConnectionManager to retrieve the broker addresses: all lowercase no spaces
-_DEE_APPLICATIONS = {'dashboard', 'autopilotservice', 'newautopilotservice'}
+_DEE_APPLICATIONS = {"dashboard", "autopilotservice", "newautopilotservice"}
 # Brokers that require username and password
-PROTECTED_BROKERS = {'classpip.upc.edu'}
+PROTECTED_BROKERS = {"classpip.upc.edu"}
 
 
 def processScriptParameters():
@@ -32,7 +32,9 @@ def processScriptParameters():
         try:
             _local_mode = int(script_parameters[_index])
         except ValueError:
-            raise Exception("ERROR: local mode must be either 0 (onboard broker) or 1 (single broker)")
+            raise Exception(
+                "ERROR: local mode must be either 0 (onboard broker) or 1 (single broker)"
+            )
         _index += 1
     else:
         if _connection_mode == "direct":
@@ -42,30 +44,35 @@ def processScriptParameters():
     _parent_application = script_parameters[-_default_ending_arguments]
     if _parent_application.lower() not in _DEE_APPLICATIONS:
         raise Exception("ERROR: invalid parent application")
-    _external_broker_address = script_parameters[_index: _index_max - _default_ending_arguments]
+    _external_broker_address = script_parameters[
+        _index : _index_max - _default_ending_arguments
+    ]
     _broker_credentials = None
 
     if _external_broker_address[0] in PROTECTED_BROKERS:
         _broker_username = script_parameters[-_default_ending_arguments - 2]
         _broker_pwd = script_parameters[-_default_ending_arguments - 1]
-        if _broker_username == _external_broker_address[0] or _broker_pwd == _external_broker_address[0]:
+        if (
+            _broker_username == _external_broker_address[0]
+            or _broker_pwd == _external_broker_address[0]
+        ):
             raise Exception("ERROR: missing broker credentials")
         else:
             _broker_credentials = (_broker_username, _broker_pwd)
         _external_broker_address = _external_broker_address[:-2]
-    if len(_external_broker_address) == 3 and _connection_mode == 'global':
+    if len(_external_broker_address) == 3 and _connection_mode == "global":
         raise Exception(f"ERROR: Too many arguments: {_external_broker_address[1:]}")
 
     _return_args = (_connection_mode, _parent_application)
     _return_kwargs = {}
     if _local_mode is not None:
-        _return_kwargs['local_mode'] = _local_mode
+        _return_kwargs["local_mode"] = _local_mode
     if _max_drones is not None:
-        _return_kwargs['max_drones'] = _max_drones
+        _return_kwargs["max_drones"] = _max_drones
     if _external_broker_address is not None:
-        _return_kwargs['external_broker_address'] = _external_broker_address
+        _return_kwargs["external_broker_address"] = _external_broker_address
     if _broker_credentials is not None:
-        _return_kwargs['broker_credentials'] = _broker_credentials
+        _return_kwargs["broker_credentials"] = _broker_credentials
 
     return _return_args, _return_kwargs
 
@@ -101,16 +108,23 @@ class ConnectionManager:
         self.inner_broker_address = _INNER_BROKER_ADDRESS
         self.inner_broker_port = _INNER_BROKER_PORT
 
-    def setParameters(self, connection_mode, parent_application, local_mode=-1, max_drones=1,
-                      external_broker_address=None, broker_credentials=None):
+    def setParameters(
+        self,
+        connection_mode,
+        parent_application,
+        local_mode=-1,
+        max_drones=1,
+        external_broker_address=None,
+        broker_credentials=None,
+    ):
         self.__setConnectionMode(connection_mode, local_mode)
         self.__setMaxDrones(max_drones)
         self.__setParentApplication(parent_application)
         self.__setExternalAddress(external_broker_address)
         self.__setBrokerCredentials(broker_credentials)
         brokers = {
-            'external': self.__getOuterAddress(),
-            'internal': self.__getInnerAddress()
+            "external": self.__getOuterAddress(),
+            "internal": self.__getInnerAddress(),
         }
         return brokers
 
@@ -125,13 +139,17 @@ class ConnectionManager:
                 elif local_mode == 1:
                     self.connection_mode = 12
                 else:
-                    return Exception("ERROR: Invalid local mode (0 = Onboard broker, 1 = single broker)")
+                    return Exception(
+                        "ERROR: Invalid local mode (0 = Onboard broker, 1 = single broker)"
+                    )
             elif connection_mode == "direct":
                 self.connection_mode = 2
             elif connection_mode == "simulation":
                 self.connection_mode = 3
             else:
-                return Exception("ERROR: Invalid operation mode (global, local, direct, simulation)")
+                return Exception(
+                    "ERROR: Invalid operation mode (global, local, direct, simulation)"
+                )
         else:
             return Exception("ERROR: Operation mode already set")
 
@@ -147,7 +165,9 @@ class ConnectionManager:
         if parent_application.lower() in _DEE_APPLICATIONS:
             self.parent_application = parent_application
         else:
-            return Exception("ERROR: Invalid parent application (either dashBoard or autopilotService)")
+            return Exception(
+                "ERROR: Invalid parent application (either dashBoard or autopilotService)"
+            )
 
     def __setExternalAddress(self, external_broker_address):
         # MQTT addresses
@@ -171,7 +191,10 @@ class ConnectionManager:
                 # broker.hivemq.com type of address
                 _outer_address = self.outer_broker_address
                 if _outer_address in PROTECTED_BROKERS:
-                    external_broker['credentials'] = self.broker_credentials[0], self.broker_credentials[1]
+                    external_broker["credentials"] = (
+                        self.broker_credentials[0],
+                        self.broker_credentials[1],
+                    )
             elif self.connection_mode == 11:
                 # 192.168.137.23 type of address
                 _outer_address = self.outer_broker_address
@@ -185,12 +208,18 @@ class ConnectionManager:
             else:
                 return Exception("ERROR: Invalid connection mode")
 
-        elif self.parent_application == "autopilotService" or self.parent_application == "NewAutopilotService":
+        elif (
+            self.parent_application == "autopilotService"
+            or self.parent_application == "NewAutopilotService"
+        ):
             if self.connection_mode == 0:
                 # broker.hivemq.com type of address
                 _outer_address = self.outer_broker_address
                 if _outer_address in PROTECTED_BROKERS:
-                    external_broker['credentials'] = self.broker_credentials[0], self.broker_credentials[1]
+                    external_broker["credentials"] = (
+                        self.broker_credentials[0],
+                        self.broker_credentials[1],
+                    )
             elif self.connection_mode == 11:
                 # localhost or inner broker address
                 _outer_address = _INNER_BROKER_ADDRESS
@@ -205,15 +234,18 @@ class ConnectionManager:
                 return Exception("ERROR: Invalid connection mode")
         else:
             return Exception("ERROR: Invalid parent application")
-        external_broker['address'] = _outer_address
-        external_broker['port'] = _outer_port
+        external_broker["address"] = _outer_address
+        external_broker["port"] = _outer_port
         return external_broker
 
     def __getInnerAddress(self):
-        if self.parent_application == "autopilotService" or self.parent_application == "NewAutopilotService":
+        if (
+            self.parent_application == "autopilotService"
+            or self.parent_application == "NewAutopilotService"
+        ):
             internal_broker = {
-                'address': self.inner_broker_address,
-                'port': self.inner_broker_port
+                "address": self.inner_broker_address,
+                "port": self.inner_broker_port,
             }
             return internal_broker
         elif self.parent_application == "dashBoard":
@@ -226,8 +258,9 @@ if __name__ == "__main__":
     # parent_application (max_drones)
     # FUNCTION SYNTAX: operation_mode, parent_application, local_mode, max_drones, external_broker_address
     processed_parameters = processScriptParameters()
-    print(f'processed parameters: {processed_parameters}')
+    print(f"processed parameters: {processed_parameters}")
     testCon = ConnectionManager()
     if not processed_parameters == Exception:
         print(
-            f'connection manager output: {testCon.setParameters(*processed_parameters[0], **processed_parameters[1])}')
+            f"connection manager output: {testCon.setParameters(*processed_parameters[0], **processed_parameters[1])}"
+        )

@@ -92,25 +92,24 @@ class ConfigurationPanel:
         ).grid(row=2, sticky="W")
 
         self.localModeFrame = tk.LabelFrame(
-            self.communicationModeFrame,
-            text="Local mode"
+            self.communicationModeFrame, text="Local mode"
         )
 
         self.localModeVar = tk.IntVar(value=0)
 
         tk.Radiobutton(
             self.localModeFrame,
-            text='Onboard broker',
+            text="Onboard broker",
             variable=self.localModeVar,
             value=0,
-            command=self.communicationModeChanged
+            command=self.communicationModeChanged,
         ).pack()
         tk.Radiobutton(
             self.localModeFrame,
-            text='Single broker',
+            text="Single broker",
             variable=self.localModeVar,
             value=1,
-            command=self.communicationModeChanged
+            command=self.communicationModeChanged,
         ).pack()
 
         self.externalBrokerFrame = tk.LabelFrame(
@@ -147,8 +146,7 @@ class ConfigurationPanel:
         self.externalBrokerOption3.grid(row=2, sticky="W")
 
         self.externalBrokerLocal0Frame = tk.LabelFrame(
-            self.ParameterFrame,
-            text='External broker'
+            self.ParameterFrame, text="External broker"
         )
 
         self.externalBrokerLocal0Entries = (
@@ -157,7 +155,7 @@ class ConfigurationPanel:
             tk.Entry(self.externalBrokerLocal0Frame),
             tk.Entry(self.externalBrokerLocal0Frame),
             tk.Entry(self.externalBrokerLocal0Frame),
-            tk.Entry(self.externalBrokerLocal0Frame)
+            tk.Entry(self.externalBrokerLocal0Frame),
         )
 
         self.credentialsFrame = tk.LabelFrame(
@@ -224,9 +222,7 @@ class ConfigurationPanel:
 
         self.rcChecksVar = tk.BooleanVar(value=True)
         self.rcChecksButton = tk.Checkbutton(
-            self.swarmModeFrame,
-            text='RC checks',
-            variable=self.rcChecksVar
+            self.swarmModeFrame, text="RC checks", variable=self.rcChecksVar
         )
         self.rcChecksButton.pack()
 
@@ -248,16 +244,30 @@ class ConfigurationPanel:
             row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nesw"
         )
 
-        self.global_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\global_scheme.png")
-                                             .resize((640, 360)))
-        self.local0_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local0_scheme.png")
-                                             .resize((640, 360)))
-        self.local1_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local1_scheme.png")
-                                             .resize((640, 360)))
-        self.direct_png = ImageTk.PhotoImage(Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\direct_scheme.png")
-                                             .resize((640, 360)))
+        self.global_png = ImageTk.PhotoImage(
+            Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\global_scheme.png").resize(
+                (640, 360)
+            )
+        )
+        self.local0_png = ImageTk.PhotoImage(
+            Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local0_scheme.png").resize(
+                (640, 360)
+            )
+        )
+        self.local1_png = ImageTk.PhotoImage(
+            Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\local1_scheme.png").resize(
+                (640, 360)
+            )
+        )
+        self.direct_png = ImageTk.PhotoImage(
+            Image.open(f"{_ABSOLUTE_DIR_PATH}assets\\direct_scheme.png").resize(
+                (640, 360)
+            )
+        )
 
-        self.commsModeImageContainer = tk.Label(self.ParameterFrame, image=self.local0_png, height=360, width=640)
+        self.commsModeImageContainer = tk.Label(
+            self.ParameterFrame, image=self.local0_png, height=360, width=640
+        )
 
         return self.ParameterFrame
 
@@ -278,14 +288,18 @@ class ConfigurationPanel:
             for drone in range(activeDrones):
                 self.externalBrokerLocal0Entries[drone].pack()
             self.externalBrokerFrame.grid_forget()
-            self.externalBrokerLocal0Frame.grid(row=0, column=2, padx=5, pady=5, sticky="nesw")
+            self.externalBrokerLocal0Frame.grid(
+                row=0, column=2, padx=5, pady=5, sticky="nesw"
+            )
 
             for checkBox in self.dataServiceCheckBox:
                 checkBox.pack_forget()
         else:
             for drone in self.externalBrokerLocal0Entries:
                 drone.pack_forget()
-            self.externalBrokerFrame.grid(row=0, column=2, padx=10, pady=10, sticky="nesw")
+            self.externalBrokerFrame.grid(
+                row=0, column=2, padx=10, pady=10, sticky="nesw"
+            )
             self.externalBrokerLocal0Frame.grid_forget()
 
             self.localModeFrame.grid_forget()
@@ -305,17 +319,17 @@ class ConfigurationPanel:
             if self.var3.get() in PROTECTED_BROKERS:
                 self.credentialsFrame.grid_forget()
 
-        if self.var1.get() == 'simulation':
+        if self.var1.get() == "simulation":
             self.commsModeImageContainer.grid_forget()
         else:
-            if self.var2.get() == 'global':
+            if self.var2.get() == "global":
                 self.commsModeImageContainer.configure(image=self.global_png)
-            elif self.var2.get() == 'local':
+            elif self.var2.get() == "local":
                 if self.localModeVar.get() == 0:
                     self.commsModeImageContainer.configure(image=self.local0_png)
                 elif self.localModeVar.get() == 1:
                     self.commsModeImageContainer.configure(image=self.local1_png)
-            elif self.var2.get() == 'direct':
+            elif self.var2.get() == "direct":
                 self.commsModeImageContainer.configure(image=self.direct_png)
             self.commsModeImageContainer.grid(row=2, columnspan=6, padx=10, pady=10)
 
@@ -364,12 +378,15 @@ class ConfigurationPanel:
                 dataServiceOptions.append(self.dataServiceOptions[i])
 
         localMode = -1
-        if self.var2.get() == 'local':
+        if self.var2.get() == "local":
             localMode = self.localModeVar.get()
 
         communicationMode = self.var2.get()
         if communicationMode == "local" and self.localModeVar.get() == 0:
-            externalBroker = [self.externalBrokerLocal0Entries[drones].get() for drones in range(max_drones)]
+            externalBroker = [
+                self.externalBrokerLocal0Entries[drones].get()
+                for drones in range(max_drones)
+            ]
         else:
             externalBroker = self.var3.get()
 
@@ -380,8 +397,8 @@ class ConfigurationPanel:
             "monitorOptions": monitorOptions,
             "dataServiceOptions": dataServiceOptions,
             "localMode": localMode,
-            'max_drones': max_drones,
-            'rc_checks': self.rcChecksVar.get(),
+            "max_drones": max_drones,
+            "rc_checks": self.rcChecksVar.get(),
         }
         if self.var3.get() in PROTECTED_BROKERS:
             parameters["username"] = self.usernameBox.get()
@@ -435,8 +452,13 @@ def on_message(client, userdata, message):
                 drone_id = int(splited[-2])
             operation_drones.set_telemetry_info(telemetry_info, drone_id)
             myFrameSelector.myMapView.update_drone(drone_id)
-            if myFrameSelector.myMapView.selected_drone != myAutopilotController.raisedFrame:
-                myAutopilotController.raiseTelemetryFrame(myFrameSelector.myMapView.selected_drone)
+            if (
+                myFrameSelector.myMapView.selected_drone
+                != myAutopilotController.raisedFrame
+            ):
+                myAutopilotController.raiseTelemetryFrame(
+                    myFrameSelector.myMapView.selected_drone
+                )
             if drone_id == myFrameSelector.myMapView.selected_drone:
                 myAutopilotController.showTelemetryInfo(telemetry_info, drone_id)
 
@@ -464,22 +486,27 @@ def configure(configuration_parameters):
     global client
     global autoBootInstances
 
-    operation_mode = configuration_parameters['communicationMode']
-    local_mode = configuration_parameters['localMode']
-    application_name = __file__.split('\\')[-1][:-3]
-    external_broker_address = configuration_parameters['externalBroker']
-    if 'pass' in configuration_parameters.keys():
-        broker_credentials = (configuration_parameters['username'], configuration_parameters['pass'])
+    operation_mode = configuration_parameters["communicationMode"]
+    local_mode = configuration_parameters["localMode"]
+    application_name = __file__.split("\\")[-1][:-3]
+    external_broker_address = configuration_parameters["externalBroker"]
+    if "pass" in configuration_parameters.keys():
+        broker_credentials = (
+            configuration_parameters["username"],
+            configuration_parameters["pass"],
+        )
     else:
         broker_credentials = None
 
     myConnectionManager = ConnectionManager()
-    broker_settings = myConnectionManager.setParameters(operation_mode,
-                                                        application_name,
-                                                        local_mode=local_mode,
-                                                        max_drones=max_drones,
-                                                        external_broker_address=external_broker_address,
-                                                        broker_credentials=broker_credentials)
+    broker_settings = myConnectionManager.setParameters(
+        operation_mode,
+        application_name,
+        local_mode=local_mode,
+        max_drones=max_drones,
+        external_broker_address=external_broker_address,
+        broker_credentials=broker_credentials,
+    )
 
     if broker_credentials is not None:
         apsUsername, apsPassword = broker_credentials
@@ -487,17 +514,27 @@ def configure(configuration_parameters):
         apsUsername, apsPassword = None, None
 
     autoBootInstances = NewAutopilotService.AutoBoot()
-    autoBootInstances.autoBoot(configuration_parameters['communicationMode'], configuration_parameters['operationMode'],
-                               external_broker_address, apsUsername, apsPassword, max_drones, verbose=True)
+    autoBootInstances.autoBoot(
+        configuration_parameters["communicationMode"],
+        configuration_parameters["operationMode"],
+        external_broker_address,
+        apsUsername,
+        apsPassword,
+        max_drones,
+        verbose=True,
+    )
 
-    if configuration_parameters['rc_checks'] is False:
+    if configuration_parameters["rc_checks"] is False:
         autoBootInstances.disable_rc_checks()
 
     client = mqtt.Client("Dashboard", transport="websockets")
     client.on_message = on_message
-    if 'credentials' in broker_settings['external'].keys():
-        client.username_pw_set(*broker_settings['external']['credentials'])
-    client.connect(host=broker_settings['external']['address'], port=broker_settings['external']['port'])
+    if "credentials" in broker_settings["external"].keys():
+        client.username_pw_set(*broker_settings["external"]["credentials"])
+    client.connect(
+        host=broker_settings["external"]["address"],
+        port=broker_settings["external"]["port"],
+    )
     client.loop_start()
     client.subscribe("+/dashBoard/#")
 
@@ -514,7 +551,7 @@ def configure(configuration_parameters):
     myAutopilotController.putClient(client)
     myRecordedPositionsWindow.putClient(client)
 
-    operation_drones.set_active(configuration_parameters['max_drones'])
+    operation_drones.set_active(configuration_parameters["max_drones"])
     myAutopilotController.operation_drones_max_drones_defined()
     myFrameSelector.myMapView.operation_drones_max_drones_defined()
 

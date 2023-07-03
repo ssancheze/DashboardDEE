@@ -1,11 +1,11 @@
 TELEMETRY_DICT_KEYS = {
-        'lat',
-        'lon',
-        'heading',
-        'groundSpeed',
-        'altitude',
-        'battery',
-        'state'
+    "lat",
+    "lon",
+    "heading",
+    "groundSpeed",
+    "altitude",
+    "battery",
+    "state",
 }
 
 # Maximum time permitted between telemetry updates (currently x5 the telemetry update rate set in AutopilotService)
@@ -16,10 +16,10 @@ TELEMETRY_AGE_MAX = 1.25
 # Maximum amount of drones supported by the dashboard.
 DASHBOARD_MAX_DRONES = 6
 
-'''
-These are the different values for the state of the autopilot: 
+"""
+These are the different values for the state of the autopilot:
 (only when connected the telemetry_info packet will be sent every 250 miliseconds)
-    'connected' 
+    'connected'
     'arming'
     'armed'
     'disarmed'
@@ -29,9 +29,9 @@ These are the different values for the state of the autopilot:
     'landing'
     'onHearth'
 
-The autopilot can also be 'disconnected' but this state will never appear in the telemetry_info packet 
+The autopilot can also be 'disconnected' but this state will never appear in the telemetry_info packet
 when disconnected the service will not send any packet
-'''
+"""
 
 
 class Drone:
@@ -57,41 +57,41 @@ class Drone:
         self.update_attributes()
 
     def update_attributes(self):
-        _state = self.telemetry_info['state']
+        _state = self.telemetry_info["state"]
 
-        if _state == 'connected':
+        if _state == "connected":
             self.connected = True
             self.armed = False
             self.on_air = False
-        elif _state == 'arming':
+        elif _state == "arming":
             self.connected = True
             self.armed = False
             self.on_air = False
-        elif _state == 'armed':
+        elif _state == "armed":
             self.connected = True
             self.armed = True
             self.on_air = False
-        elif _state == 'disarmed':
+        elif _state == "disarmed":
             self.connected = True
             self.armed = False
             self.on_air = False
-        elif _state == 'takingOff':
+        elif _state == "takingOff":
             self.connected = True
             self.armed = True
             self.on_air = True
-        elif _state == 'flying':
+        elif _state == "flying":
             self.connected = True
             self.armed = True
             self.on_air = True
-        elif _state == 'returningHome':
+        elif _state == "returningHome":
             self.connected = True
             self.armed = True
             self.on_air = True
-        elif _state == 'landing':
+        elif _state == "landing":
             self.connected = True
             self.armed = True
             self.on_air = True
-        elif _state == 'onHearth':
+        elif _state == "onHearth":
             self.connected = True
             self.armed = False
             self.on_air = False
@@ -100,8 +100,9 @@ class Drone:
 def updateAttributes(func):
     def wrapper(self, telemetry_info, drone_id):
         func(self, telemetry_info, drone_id)
-        for attr in {'connected', 'armed', 'on_air'}:
+        for attr in {"connected", "armed", "on_air"}:
             self.update_attribute(attr)
+
     return wrapper
 
 

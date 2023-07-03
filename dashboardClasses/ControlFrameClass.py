@@ -30,7 +30,11 @@ class ControlFrame:
         )
 
         self.disarmButton = tk.Button(
-            self.controlFrame, text="Disarm", bg="green", fg="white", command=self.disarm
+            self.controlFrame,
+            text="Disarm",
+            bg="green",
+            fg="white",
+            command=self.disarm,
         )
         self.disarmButton.grid(
             row=0,
@@ -221,7 +225,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "North")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go", "North"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -230,7 +236,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "South")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go", "South"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -239,7 +247,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "East")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go", "East"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -248,7 +258,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "West")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go", "West"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -257,7 +269,10 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "NorthWest")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go",
+                        "NorthWest",
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -266,7 +281,10 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "NorthEst")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go",
+                        "NorthEst",
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -275,7 +293,10 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "SouthWest")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go",
+                        "SouthWest",
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -284,7 +305,10 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "SouthEst")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go",
+                        "SouthEst",
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -293,7 +317,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/go", "Stop")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/go", "Stop"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -302,7 +328,11 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/returnToLaunch")
+                    self.client.publish(
+                        "dashBoard/autopilotService/"
+                        + str(drone_id)
+                        + "/returnToLaunch"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -311,7 +341,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.connected and not drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/armDrone")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/armDrone"
+                    )
         else:
             messagebox.showwarning(
                 "Warning", "No puedes armar. Primero debes conectarte"
@@ -322,7 +354,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.connected and not drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/disarmDrone")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/disarmDrone"
+                    )
         else:
             messagebox.showwarning("Warning", "No puedes desarmar. Estas volando")
 
@@ -334,7 +368,8 @@ class ControlFrame:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.armed and not drone.on_air:
                     self.client.publish(
-                        "dashBoard/autopilotService/" + str(drone_id) + "/takeOff", self.altitude.get()
+                        "dashBoard/autopilotService/" + str(drone_id) + "/takeOff",
+                        self.altitude.get(),
                     )
             # self._setState(self.onAir, True)
         else:
@@ -345,7 +380,9 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/autopilotService/" + str(drone_id) + "/land")
+                    self.client.publish(
+                        "dashBoard/autopilotService/" + str(drone_id) + "/land"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")
 
@@ -354,6 +391,8 @@ class ControlFrame:
             for drone_id in self.swarmNumber:
                 drone = self.operation_drones.drones[drone_id]
                 if drone.on_air:
-                    self.client.publish("dashBoard/LEDsService/" + str(drone_id) + "/drop")
+                    self.client.publish(
+                        "dashBoard/LEDsService/" + str(drone_id) + "/drop"
+                    )
         else:
             messagebox.showwarning("Warning", "No estas volando")

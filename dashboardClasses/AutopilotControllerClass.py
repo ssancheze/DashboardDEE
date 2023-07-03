@@ -48,11 +48,15 @@ class AutopilotController:
         )
 
         # Telemetry info ----------------------
-        self.myTelemetryInfoFrameClass = [TelemetryInfoFrame(0), ]
-        self.telemetryInfoFrame = [self.myTelemetryInfoFrameClass[0].buildFrame(self.autopilotControlFrame)]
+        self.myTelemetryInfoFrameClass = [
+            TelemetryInfoFrame(0),
+        ]
+        self.telemetryInfoFrame = [
+            self.myTelemetryInfoFrameClass[0].buildFrame(self.autopilotControlFrame)
+        ]
         self.telemetryInfoFrame[0].grid(
-                row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W
-            )
+            row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W
+        )
         self.telemetryInfoFrame[0].tkraise()
         self.raisedFrame = 0
         # Control ----------------------
@@ -119,7 +123,7 @@ class AutopilotController:
             text="#1",
             variable=self.drone1Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone1CheckButton.grid(row=0, column=0, pady=5)
 
@@ -129,7 +133,7 @@ class AutopilotController:
             text="#2",
             variable=self.drone2Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone2CheckButton.grid(row=0, column=1, pady=5)
 
@@ -139,7 +143,7 @@ class AutopilotController:
             text="#3",
             variable=self.drone3Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone3CheckButton.grid(row=0, column=2, pady=5)
 
@@ -149,7 +153,7 @@ class AutopilotController:
             text="#4",
             variable=self.drone4Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone4CheckButton.grid(row=0, column=3, pady=5)
 
@@ -159,7 +163,7 @@ class AutopilotController:
             text="#5",
             variable=self.drone5Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone5CheckButton.grid(row=0, column=4, pady=5)
 
@@ -169,7 +173,7 @@ class AutopilotController:
             text="#6",
             variable=self.drone6Var,
             state=tk.DISABLED,
-            command=self.swarmControlCheckButtonChanged
+            command=self.swarmControlCheckButtonChanged,
         )
         drone6CheckButton.grid(row=0, column=5, pady=5)
 
@@ -187,7 +191,9 @@ class AutopilotController:
     def connect_button_clicked(self):
         if self.connectButton["text"] == "Connect":
             for drone_id in self.swarmAll:
-                self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/connect")
+                self.client.publish(
+                    "dashBoard/autopilotService/" + str(drone_id) + "/connect"
+                )
                 self.operation_drones.set_connected(drone_id, True)
 
             self.connectButton["text"] = "Connecting ..."
@@ -200,8 +206,12 @@ class AutopilotController:
                     if drone.on_air or drone.armed:
                         return
                     else:
-                        self.client.publish("dashBoard/autopilotService/"+str(drone_id)+"/disconnect")
-                        drone.telemetry_info['state'] = 'disconnected'
+                        self.client.publish(
+                            "dashBoard/autopilotService/"
+                            + str(drone_id)
+                            + "/disconnect"
+                        )
+                        drone.telemetry_info["state"] = "disconnected"
                         self.operation_drones.set_connected(drone_id, False)
 
                 if self.operation_drones.connected < 0:
@@ -222,8 +232,12 @@ class AutopilotController:
             for drone_id in range(1, self.operation_drones.max_drones):
                 telemetry_frame_class = TelemetryInfoFrame(drone_id)
                 self.myTelemetryInfoFrameClass.append(telemetry_frame_class)
-                telemetry_frame = telemetry_frame_class.buildFrame(self.autopilotControlFrame)
-                telemetry_frame.grid(row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W)
+                telemetry_frame = telemetry_frame_class.buildFrame(
+                    self.autopilotControlFrame
+                )
+                telemetry_frame.grid(
+                    row=1, column=0, padx=20, sticky=tk.N + tk.S + tk.E + tk.W
+                )
                 self.telemetryInfoFrame.append(telemetry_frame)
 
     def raiseTelemetryFrame(self, _id):
@@ -236,7 +250,10 @@ class AutopilotController:
         if self.flightPlanDesignerWindow is not None:
             self.flightPlanDesignerWindow.showTelemetryInfo(telemetry_info)
 
-        if telemetry_info["state"] == "connected" and self.operation_drones.connected == 1:
+        if (
+            telemetry_info["state"] == "connected"
+            and self.operation_drones.connected == 1
+        ):
             self.connected = True
             self.connectButton["text"] = "Disconnect"
             self.connectButton["bg"] = "green"
@@ -416,7 +433,9 @@ class AutopilotController:
             self.drone5Var.get(),
             self.drone6Var.get(),
         ]
-        self.swarmNumber = [index for index, value in enumerate(self.swarmModeDronesList) if value]
+        self.swarmNumber = [
+            index for index, value in enumerate(self.swarmModeDronesList) if value
+        ]
         self.myControlFrameClass.setSwarmDroneNumber(self.swarmNumber)
 
     def close(self):

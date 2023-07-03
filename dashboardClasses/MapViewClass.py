@@ -6,16 +6,16 @@ from dashboardClasses.DroneClass import Drone
 
 # FILL COLOR OF THE MAP CROSSHAIR DEPENDING ON THE DRONE STATE
 TK_STATE_COLORS = {
-    'connected': 'green',
-    'arming': 'GreenYellow',
-    'armed': 'yellow',
-    'disarmed': 'green',
-    'takingOff': 'orange',
-    'flying': 'red',
-    'returningHome': 'red4',
-    'landing': 'red4',
-    'onHearth': 'green',
-    'disconnected': 'grey'
+    "connected": "green",
+    "arming": "GreenYellow",
+    "armed": "yellow",
+    "disarmed": "green",
+    "takingOff": "orange",
+    "flying": "red",
+    "returningHome": "red4",
+    "landing": "red4",
+    "onHearth": "green",
+    "disconnected": "grey",
 }
 # CROSSHAIR SIZE USED FOR DISPLAY IN MAP
 _CROSSHAIR_SIZE = 10
@@ -23,7 +23,7 @@ _CROSSHAIR_SIZE = 10
 
 def find_center(map_canvas, item):
     coords = map_canvas.bbox(item)
-    offset = ((coords[2] - coords[0])/2, (coords[3] - coords[1])/2)
+    offset = ((coords[2] - coords[0]) / 2, (coords[3] - coords[1]) / 2)
     return offset
 
 
@@ -68,12 +68,15 @@ class MapViewHandler:
         self.selected_drone = selected_drone
 
     def operation_drones_max_drones_defined(self):
-        self.map_drones = [MapDrone(drone, _id, self) for _id, drone in enumerate(self.operation_drones.drones)]
+        self.map_drones = [
+            MapDrone(drone, _id, self)
+            for _id, drone in enumerate(self.operation_drones.drones)
+        ]
 
     def grey_out(self, _id):
         self.map_drones[_id].crosshair.set_fill_color(
-            self.map_canvas,
-            TK_STATE_COLORS['disconnected'])
+            self.map_canvas, TK_STATE_COLORS["disconnected"]
+        )
 
 
 class Coordinates:
@@ -114,8 +117,10 @@ class Crosshair:
 
     def place_crosshair(self, map_canvas):
         self.id = map_canvas.create_oval(*self.crosshair_args, offset=tk.CENTER)
-        self.canvas_tag = map_canvas.create_text(0, 0, text='', anchor='center', fill='white')
-        map_canvas.tag_bind(self.id, '<Button-1>', self.on_crosshair_click)
+        self.canvas_tag = map_canvas.create_text(
+            0, 0, text="", anchor="center", fill="white"
+        )
+        map_canvas.tag_bind(self.id, "<Button-1>", self.on_crosshair_click)
 
     def set_visibility(self, map_canvas, visibility):
         self.visibility = visibility
@@ -124,15 +129,21 @@ class Crosshair:
 
     def set_position(self, map_canvas, position):
         self.position = position
-        map_canvas.moveto(self.id, position[0] - _CROSSHAIR_SIZE/2, position[1] - _CROSSHAIR_SIZE/2)
+        map_canvas.moveto(
+            self.id,
+            position[0] - _CROSSHAIR_SIZE / 2,
+            position[1] - _CROSSHAIR_SIZE / 2,
+        )
         offset = find_center(map_canvas, self.canvas_tag)
-        map_canvas.moveto(self.canvas_tag, position[0] - offset[0], position[1] + offset[1])
+        map_canvas.moveto(
+            self.canvas_tag, position[0] - offset[0], position[1] + offset[1]
+        )
 
     def set_fill_color(self, map_canvas, color):
         map_canvas.itemconfig(self.id, fill=color)
 
     def set_canvas_tag(self, map_canvas, drone_id):
-        map_canvas.itemconfig(self.canvas_tag, text=f'{drone_id+1}')
+        map_canvas.itemconfig(self.canvas_tag, text=f"{drone_id+1}")
 
     def on_crosshair_click(self, event):
         self.drone.set_mapViewHandler_selected_drone(self.drone.drone_id)
@@ -154,10 +165,14 @@ class MapDrone:
         if self.drone.telemetry_info:
             if self.crosshair.visibility == tk.HIDDEN:
                 self.crosshair.set_visibility(map_canvas, tk.NORMAL)
-            position = coordinates.ll_to_xy(self.drone.telemetry_info["lat"], self.drone.telemetry_info["lon"])
+            position = coordinates.ll_to_xy(
+                self.drone.telemetry_info["lat"], self.drone.telemetry_info["lon"]
+            )
             self.crosshair.set_position(map_canvas, position)
             # Set its fill color
-            self.crosshair.set_fill_color(map_canvas, TK_STATE_COLORS[self.drone.telemetry_info['state']])
+            self.crosshair.set_fill_color(
+                map_canvas, TK_STATE_COLORS[self.drone.telemetry_info["state"]]
+            )
 
     def set_mapViewHandler_selected_drone(self, _id):
         self.mapViewHandler.set_selected_drone(_id)
@@ -166,7 +181,7 @@ class MapDrone:
 class Map:
     def __init__(self):
         # Map image and loading to canvas
-        self.map_image = Image.open(__file__[:-32]+"assets\\dronLab.png")
+        self.map_image = Image.open(__file__[:-32] + "assets\\dronLab.png")
         self.map_image = self.map_image.resize((800, 600))
         self.map_image_tk = ImageTk.PhotoImage(self.map_image)
 
@@ -180,23 +195,23 @@ if __name__ == "__main__":
     mapViewClass = MapViewHandler(testMaster)
 
     telemetry_info1 = {
-        'lat': 41.27630767131425,
-        'lon': 1.9886698469838262,
-        'heading': 270,
-        'groundSpeed': 6,
-        'altitude': 10,
-        'battery': 37,
-        'state': 'flying'
+        "lat": 41.27630767131425,
+        "lon": 1.9886698469838262,
+        "heading": 270,
+        "groundSpeed": 6,
+        "altitude": 10,
+        "battery": 37,
+        "state": "flying",
     }
 
     telemetry_info2 = {
-        'lat': 41.276485,
-        'lon': 1.988801,
-        'heading': 270,
-        'groundSpeed': 6,
-        'altitude': 10,
-        'battery': 37,
-        'state': 'takingOff'
+        "lat": 41.276485,
+        "lon": 1.988801,
+        "heading": 270,
+        "groundSpeed": 6,
+        "altitude": 10,
+        "battery": 37,
+        "state": "takingOff",
     }
 
     mapViewClass.getFrame().pack()

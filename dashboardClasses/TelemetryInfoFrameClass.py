@@ -7,8 +7,9 @@ class TelemetryInfoFrame:
 
     def buildFrame(self, fatherFrame):
         self.telemetryInfoFrame = tk.LabelFrame(
-            fatherFrame, text=f"Telemetry info, drone #{self.drone_id+1} (Select drone on map to view its telemetry)",
-            width=50
+            fatherFrame,
+            text=f"Telemetry info, drone #{self.drone_id+1} (Select drone on map to view its telemetry)",
+            width=50,
         )
 
         self.telemetryInfoFrame.rowconfigure(0, weight=1)
