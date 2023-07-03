@@ -637,6 +637,7 @@ showRecordedPositionsButton = tk.Button(
 showRecordedPositionsButton.pack(pady=5)
 
 master.mainloop()
+if autoBootInstances is not None:
+    atexit.register(autoBootInstances.disconnect_instances)
 
-atexit.register(autoBootInstances.disconnect_instances)
 atexit.register(dashboardClasses.BrokerHandlerClass.stop)
