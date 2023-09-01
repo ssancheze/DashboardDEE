@@ -538,7 +538,7 @@ class AutopilotInstance:
         return self.vehicle.armed
 
     def disable_rc_check(self):
-        self.vehicle.parameters["ARMING_CHECK"] = 72
+        self.vehicle.parameters["ARMING_CHECK"] = 65470
 
     def reset_rc_check(self):
         self.vehicle.parameters["ARMING_CHECK"] = 1
